@@ -1,0 +1,6 @@
+﻿services:
+  prod:
+    image: prod
+    build:
+      context: .
+      dockerfile: Prod/Dockerfile
