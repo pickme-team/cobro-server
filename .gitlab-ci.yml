@@ -11,6 +11,11 @@ variables:
   TEST_PROJECT_NAME: "Prod.Tests"
   TEST_INTG_PROJECT_NAME: "Prod.Tests.Integration"
   BUILD_CONFIGURATION: "Release"
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_HOST: "tcp://docker:2376"
+  DOCKER_TLS_VERIFY: "1"
+  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  DOCKER_DRIVER: overlay2
 
 build:
   stage: build
@@ -38,12 +43,9 @@ publish:
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-  script:
+  before_script: 
     - docker info
+  script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
     - docker build -t "$CI_REGISTRY_IMAGE/prod:latest" ./Prod
     - docker push "$CI_REGISTRY_IMAGE/prod:latest"
