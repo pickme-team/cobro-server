@@ -3,6 +3,8 @@ image: mcr.microsoft.com/dotnet/sdk:9.0
 stages:
   - build
   - test
+  - publish
+  - deploy
 
 variables:
   PROJECT_NAME: "Prod"
@@ -30,3 +32,37 @@ test:
     - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
   dependencies:
     - build
+
+publish:
+  stage: publish
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker info
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+    - docker build -t "$CI_REGISTRY_IMAGE/prod:latest" ./Prod
+    - docker push "$CI_REGISTRY_IMAGE/prod:latest"
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client docker-cli docker-compose-plugin
+    - mkdir -p ~/.ssh
+    - echo "$ENV_PRIVATE_KEY_BASE64" | base64 -d > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan "$ENV_SSH_HOST" >> ~/.ssh/known_hosts
+  script:
+    - scp -o StrictHostKeyChecking=no docker-compose.yml "$ENV_SSH_USER@$ENV_SSH_HOST:/app/docker-compose.yml"
+    - ssh -o StrictHostKeyChecking=no "$ENV_SSH_USER@$ENV_SSH_HOST" "
+      echo '$CI_REGISTRY_PASSWORD' | docker login -u '$CI_REGISTRY_USER' --password-stdin '$CI_REGISTRY' &&
+      docker compose -f /app/docker-compose.yml down &&
+      docker compose -f /app/docker-compose.yml pull &&
+      docker compose -f /app/docker-compose.yml up -d
+      "
+  

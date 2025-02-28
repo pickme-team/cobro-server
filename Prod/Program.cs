@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -55,6 +53,7 @@ services.AddAuthorization();
 services.AddAuthentication().AddJwtBearer();
 
 services.AddScoped<IAuthService, AuthService>();
+services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
