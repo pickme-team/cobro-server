@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Prod.Services;
@@ -11,9 +12,11 @@ using Prod.Services;
 namespace Prod.Migrations
 {
     [DbContext(typeof(ProdContext))]
-    partial class ProdContextModelSnapshot : ModelSnapshot
+    [Migration("20250228231709_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,14 +35,10 @@ namespace Prod.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("End")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRoom")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("Start")
                         .HasColumnType("timestamp with time zone");
@@ -47,6 +46,11 @@ namespace Prod.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -57,9 +61,39 @@ namespace Prod.Migrations
 
                     b.ToTable("Books");
 
-                    b.HasDiscriminator<bool>("IsRoom").HasValue(false);
+                    b.HasDiscriminator<string>("Type").HasValue("Book");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Prod.Models.Database.Place", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Place");
+                });
+
+            modelBuilder.Entity("Prod.Models.Database.PlaceCount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Count");
                 });
 
             modelBuilder.Entity("Prod.Models.Database.Room", b =>
@@ -113,6 +147,18 @@ namespace Prod.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Prod.Models.Database.PlaceBook", b =>
+                {
+                    b.HasBaseType("Prod.Models.Database.Book");
+
+                    b.Property<Guid>("PlaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("PlaceId");
+
+                    b.HasDiscriminator().HasValue("Place");
+                });
+
             modelBuilder.Entity("Prod.Models.Database.RoomBook", b =>
                 {
                     b.HasBaseType("Prod.Models.Database.Book");
@@ -122,7 +168,14 @@ namespace Prod.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.HasDiscriminator().HasValue(true);
+                    b.HasDiscriminator().HasValue("Room");
+                });
+
+            modelBuilder.Entity("Prod.Models.Database.SpaceBook", b =>
+                {
+                    b.HasBaseType("Prod.Models.Database.Book");
+
+                    b.HasDiscriminator().HasValue("Space");
                 });
 
             modelBuilder.Entity("Prod.Models.Database.Book", b =>
@@ -136,6 +189,17 @@ namespace Prod.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Prod.Models.Database.PlaceBook", b =>
+                {
+                    b.HasOne("Prod.Models.Database.Place", "Place")
+                        .WithMany("Books")
+                        .HasForeignKey("PlaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Place");
+                });
+
             modelBuilder.Entity("Prod.Models.Database.RoomBook", b =>
                 {
                     b.HasOne("Prod.Models.Database.Room", "Room")
@@ -145,6 +209,11 @@ namespace Prod.Migrations
                         .IsRequired();
 
                     b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("Prod.Models.Database.Place", b =>
+                {
+                    b.Navigation("Books");
                 });
 
             modelBuilder.Entity("Prod.Models.Database.Room", b =>

@@ -23,7 +23,5 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
             .HasValue<PlaceBook>("Place")
             .HasValue<RoomBook>("Room")
             .HasValue<SpaceBook>("Space");
-
-        modelBuilder.Entity<PlaceCount>().HasNoKey();
     }
 }
