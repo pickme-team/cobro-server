@@ -40,6 +40,8 @@ services.AddHttpLogging(o =>
                       | HttpLoggingFields.Duration);
 builder.Logging.AddSerilog().AddOpenTelemetry();
 
+services.AddScoped<IAuthService, AuthService>();
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
