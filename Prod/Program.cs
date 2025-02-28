@@ -1,8 +1,24 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Prod.Services;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+
+services.AddOpenApi();
+
+services.AddSwaggerGen();
+
+services.AddDbContext<ProdContext>(o =>
+    o.UseNpgsql(new NpgsqlConnectionStringBuilder
+        {
+            Host = "postgres",
+            Port = 5432,
+            Database = builder.Configuration["POSTGRES_DB"],
+            Username = builder.Configuration["POSTGRES_USER"],
+            Password = builder.Configuration["POSTGRES_PASSWORD"]
+        }.ConnectionString,
+        options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
 var app = builder.Build();
 
@@ -13,6 +29,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 var summaries = new[]
 {
@@ -32,6 +51,12 @@ app.MapGet("/weatherforecast", () =>
         return forecast;
     })
     .WithName("GetWeatherForecast");
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ProdContext>();
+    context.Database.EnsureCreated();
+}
 
 app.Run();
 
