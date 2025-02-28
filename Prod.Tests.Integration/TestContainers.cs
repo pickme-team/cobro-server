@@ -29,7 +29,7 @@ public class TestContainers : IAsyncLifetime
     public Uri BaseAddress { get; private set; } = null!;
     public HttpClient Client { get; private set; } = null!;
 
-    private readonly IFutureDockerImage _image =
+    private static readonly IFutureDockerImage image =
         new ImageFromDockerfileBuilder()
             .WithDockerfileDirectory(Solution, string.Empty)
             .WithDockerfile("./Prod/Dockerfile")
@@ -42,22 +42,24 @@ public class TestContainers : IAsyncLifetime
     private static readonly PostgreSqlContainer _dbContainer = 
         new PostgreSqlBuilder()
             .WithImage(pgImage)
+            .WithPortBinding(5432, 5432)
             .WithEnvironment(Envs)
             .WithNetwork(Network)
+            .WithNetworkAliases("postgres")
             .Build();
 
     private static readonly IContainer _appContainer =
         new ContainerBuilder()
-            .WithImage(pgImage)
+            .WithImage(image)
+            .WithNetwork(Network)
+            .WithPortBinding(8080, true)
             .WithEnvironment(Envs)
-            .DependsOn(_dbContainer)
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8080))
+            .DependsOn(_dbContainer)
             .Build();
 
     private static IReadOnlyDictionary<string, string> ExtractEnvironmentVariables()
     {
-        var environmentVariables = new Dictionary<string, string>();
-
         var path = Path.Combine(Solution.DirectoryPath, "Prod/.env");
         var lines = File.ReadAllLines(path);
 
@@ -75,7 +77,7 @@ public class TestContainers : IAsyncLifetime
     {
         try
         {
-            var imageTask = _image.CreateAsync();
+            var imageTask = image.CreateAsync();
             var dbTask = _dbContainer.StartAsync();
             
             await Task.WhenAll(imageTask, dbTask);
