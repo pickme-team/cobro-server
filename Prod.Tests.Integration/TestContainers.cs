@@ -64,7 +64,7 @@ public class TestContainers : IAsyncLifetime
         var dict = new Dictionary<string, string>();
         foreach (var line in lines)
         {
-            var kayValue = line.Split(' ');
+            var kayValue = line.Split('=');
             dict[kayValue[0]] = kayValue[1];
         }
         
