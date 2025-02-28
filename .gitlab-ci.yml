@@ -1,0 +1,30 @@
+image: mcr.microsoft.com/dotnet/sdk:9.0
+
+stages:
+  - build
+  - test
+
+variables:
+  PROJECT_NAME: "Prod"
+  TEST_PROJECT_NAME: "Prod.Tests"
+  BUILD_CONFIGURATION: "Release"
+
+build:
+  stage: build
+  script:
+    - echo "Restoring dependencies..."
+    - dotnet restore $PROJECT_NAME
+    - echo "Building the project..."
+    - dotnet build $PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-restore
+  artifacts:
+    paths:
+      - $PROJECT_NAME/bin/$BUILD_CONFIGURATION/net9.0/
+    expire_in: 1 week
+
+test:
+  stage: test
+  script:
+    - echo "Running unit tests..."
+    - dotnet test $TEST_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
+  dependencies:
+    - build
