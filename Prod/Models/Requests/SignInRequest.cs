@@ -1,8 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Prod.Models.Requests;
 
 public class SignInRequest
 {
-    public string Email { get; init; }
+    [Required] [Email] public string Email { get; init; }
 
-    public string Password { get; init; }
+    [Required] [Password] public string Password { get; init; }
 }

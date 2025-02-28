@@ -1,14 +1,16 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using OpenTelemetry.Metrics;
+using Prod.Exceptions;
 using Prod.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
-services.AddControllers();
+services.AddControllers(o => o.Filters.Add<ExceptionFilter>());
 
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
@@ -39,6 +41,11 @@ services.AddHttpLogging(o =>
                       | HttpLoggingFields.ResponseStatusCode
                       | HttpLoggingFields.Duration);
 builder.Logging.AddSerilog().AddOpenTelemetry();
+
+services.AddSingleton<IJwtService, JwtService>();
+services.ConfigureOptions<JwtBearerOptionsConfiguration>();
+services.AddAuthorization();
+services.AddAuthentication().AddJwtBearer();
 
 services.AddScoped<IAuthService, AuthService>();
 
