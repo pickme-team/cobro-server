@@ -1,6 +1,6 @@
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using Prod.Services;
 using Serilog;
@@ -33,6 +33,11 @@ services.AddOpenTelemetry()
         options.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
     });
 
+services.AddHttpLogging(o =>
+    o.LoggingFields = HttpLoggingFields.RequestMethod
+                      | HttpLoggingFields.RequestPath
+                      | HttpLoggingFields.ResponseStatusCode
+                      | HttpLoggingFields.Duration);
 builder.Logging.AddSerilog().AddOpenTelemetry();
 
 var app = builder.Build();
