@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Prod.Exceptions;
 using Prod.Services;
 using Serilog;
@@ -33,6 +35,11 @@ services.AddOpenTelemetry()
         options.AddHttpClientInstrumentation();
         options.AddMeter("Microsoft.AspNetCore.Hosting");
         options.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+    })
+    .WithTracing(options =>
+    {
+        options.AddHttpClientInstrumentation();
+        options.AddAspNetCoreInstrumentation();
     });
 
 services.AddHttpLogging(o =>
