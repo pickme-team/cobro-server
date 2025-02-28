@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Prod.Services;
 using Serilog;
 
@@ -31,6 +33,11 @@ services.AddOpenTelemetry()
         options.AddHttpClientInstrumentation();
         options.AddMeter("Microsoft.AspNetCore.Hosting");
         options.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+    })
+    .WithTracing(options =>
+    {
+        options.AddHttpClientInstrumentation();
+        options.AddAspNetCoreInstrumentation();
     });
 
 builder.Logging.AddSerilog().AddOpenTelemetry();
