@@ -1,6 +1,6 @@
 ﻿services:
   prod:
-    image: prod
+    image: gitlab.prodcontest.ru:5050/team-21/3bd/prod:latest
     env_file:
       - Prod/.env
     build:
@@ -10,8 +10,7 @@
       postgres:
         condition: service_healthy
     ports:
-      - "8080:8080"
-
+      - "80:8080"
   postgres:
     image: postgres:latest
     env_file:

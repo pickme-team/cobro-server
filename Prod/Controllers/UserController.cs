@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Prod.Models;
 using Prod.Models.Database;
@@ -7,6 +8,7 @@ namespace Prod.Controllers;
 
 [ApiController]
 [Route("user")]
+[Authorize]
 public class UserController(IUserService userService) : ControllerBase
 {
     [HttpGet("{id}")]
