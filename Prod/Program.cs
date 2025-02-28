@@ -5,6 +5,9 @@ using Prod.Services;
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
+services.AddControllers();
+
+services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 
 services.AddDbContext<ProdContext>(o =>
