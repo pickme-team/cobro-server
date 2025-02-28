@@ -10,5 +10,20 @@ public class BookService(ProdContext context) : IBookService
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.Count, count));
     }
 
-    public async Task<int> PlacesCount() => (await context.Count.SingleAsync()).Count;
+    public async Task<int> PlaceCount() => (await context.Count.SingleAsync()).Count;
+
+    public Task BookRoom(Guid roomId, Guid userId, DateTime from, DateTime to)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task BookPlace(Guid placeId, Guid userId, DateTime from, DateTime to)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task BookSpace(Guid userId, DateTime from, DateTime to)
+    {
+        throw new NotImplementedException();
+    }
 }
