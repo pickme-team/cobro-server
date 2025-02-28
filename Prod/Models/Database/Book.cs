@@ -3,6 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace Prod.Models.Database;
 
+public enum Status
+{
+    Active,
+    Inactive,
+    Pending
+}
+
 public class Book
 {
     public Guid Id { get; set; }
@@ -11,5 +18,5 @@ public class Book
     [Required] public DateTime start { get; set; }
     [Required] public DateTime end { get; set; }
     [Required] public User User { get; set; }
-    [Required] public string Description { get; set; } = null!;
+    [Required] public Status Status { get; set; }
 }
