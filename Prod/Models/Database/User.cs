@@ -1,6 +1,6 @@
 namespace Prod.Models.Database;
 
-public class UserDto
+public class User
 {
     public Guid Id { get; set; }
 

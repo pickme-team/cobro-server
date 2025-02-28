@@ -5,10 +5,10 @@ namespace Prod.Services;
 
 public class ProdContext(DbContextOptions options) : DbContext(options)
 {
-    public DbSet<UserDto> Users { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserDto>().HasIndex(u => u.Email).IsUnique();
+        modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
     }
 }

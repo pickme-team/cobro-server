@@ -35,7 +35,7 @@ public class JwtService : IJwtService
             IssuerSigningKey = _signingKey
         };
 
-    public string GenerateToken(UserDto user)
+    public string GenerateToken(User user)
     {
         var jwt = new JwtSecurityToken(
             issuer: Issuer,

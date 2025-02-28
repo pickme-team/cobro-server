@@ -14,7 +14,7 @@ public class AuthService(ProdContext context, IJwtService jwtService) : IAuthSer
     public async Task<AuthResponse> SignUp(SignUpRequest request)
     {
         var hash = _passwordHasher.HashPassword(request.Email, request.Password);
-        var user = new UserDto
+        var user = new User
         {
             Name = request.Name,
             Email = request.Email,

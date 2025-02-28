@@ -6,5 +6,5 @@ namespace Prod.Services;
 public interface IJwtService
 {
     TokenValidationParameters ValidationParameters { get; }
-    string GenerateToken(UserDto user);
+    string GenerateToken(User user);
 }
