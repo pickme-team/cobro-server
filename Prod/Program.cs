@@ -4,6 +4,7 @@ using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prod.Exceptions;
+using Prod.Models.Database;
 using Prod.Services;
 using Serilog;
 
@@ -57,6 +58,7 @@ services.AddAuthentication().AddJwtBearer();
 
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();
+services.AddScoped<IBookService, BookService>();
 
 var app = builder.Build();
 
@@ -73,6 +75,12 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ProdContext>();
     context.Database.Migrate();
+
+    if (!context.Count.Any())
+    {
+        context.Count.Add(new PlaceCount { Count = 0 });
+        context.SaveChanges();
+    }
 }
 
 app.Run();

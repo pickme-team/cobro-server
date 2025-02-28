@@ -11,14 +11,17 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<Room> Rooms { get; set; }
 
+    public DbSet<PlaceCount> Count { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
         modelBuilder.Entity<Book>().Property(u => u.Status).HasConversion<string>();
 
         modelBuilder.Entity<Book>()
-            .HasDiscriminator<bool>("IsRoom")
-            .HasValue<Book>(false)
-            .HasValue<RoomBook>(true);
+            .HasDiscriminator<string>("Type")
+            .HasValue<PlaceBook>("Place")
+            .HasValue<RoomBook>("Room")
+            .HasValue<SpaceBook>("Space");
     }
 }
