@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using Prod.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -17,6 +20,17 @@ services.AddDbContext<ProdContext>(o =>
             Password = builder.Configuration["POSTGRES_PASSWORD"]
         }.ConnectionString,
         options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+
+services.AddOpenTelemetry()
+    .WithMetrics(options =>
+    {
+        options.AddAspNetCoreInstrumentation();
+        options.AddHttpClientInstrumentation();
+        options.AddMeter("Microsoft.AspNetCore.Hosting");
+        options.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+    });
+
+builder.Logging.AddSerilog().AddOpenTelemetry();
 
 var app = builder.Build();
 
