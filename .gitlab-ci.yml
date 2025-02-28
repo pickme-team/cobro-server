@@ -56,19 +56,22 @@ deploy:
   variables:
     SSH_HOST: "192.168.0.1"
     SSH_USER: "ubuntu"
-    SSH_ADDRESS: $SSH_USER@$SSH_HOST
+    SSH_ADDRESS: $ENV_SSH_USER@$ENV_SSH_HOST
   before_script:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config && chmod 600 ~/.ssh/config
-    - echo "$SSH_PRIVATE_KEY_BASE64" | base64 -d > ~/.ssh/id_rsa && chmod 400 ~/.ssh/id_rsa
+    - echo "$ENV_PRIVATE_KEY_BASE64" | base64 -d > ~/.ssh/id_rsa && chmod 400 ~/.ssh/id_rsa
+    - head -n 5 ~/.ssh/id_rsa
+      # Add the key to the SSH agent
+    - eval $(ssh-agent -s)
     - ssh-agent sh -c "ssh-add ~/.ssh/id_rsa"
-    - ssh-keyscan -H "$SSH_HOST"
+    - ssh-keyscan -H "$ENV_SSH_HOST"
   script:
-    - scp -o StrictHostKeyChecking=no compose.yaml "$ENV_SSH_USER@$ENV_SSH_HOST:/compose.yaml"
+    - scp -o StrictHostKeyChecking=no compose.yaml "$ENV_SSH_USER@$ENV_SSH_HOST:/home/ubuntu/compose.yaml"
     - ssh -o StrictHostKeyChecking=no "$ENV_SSH_USER@$ENV_SSH_HOST" "
-      echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin' &&
-      docker compose down &&
-      docker compose pull &&
-      docker compose up -d
+      echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin &&
+      docker compose -f /home/ubuntu/compose.yaml down &&
+      docker compose -f /home/ubuntu/compose.yaml pull &&
+      docker compose -f /home/ubuntu/compose.yaml up -d
       "
   
