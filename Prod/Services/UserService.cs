@@ -1,39 +1,32 @@
+using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class UserService(ProdContext context)
+public class UserService(ProdContext context) : IUserService
 {
-    public User? UserById(Guid id)
-    {
-        return context.Users.Find(id);
-    }
+    public async Task<User?> UserById(Guid id) => await context.Users.FindAsync(id);
 
-    public User? UserByEmail(string email)
-    {
-        return context.Users.FirstOrDefault(u => u.Email == email);
-    }
+    public async Task<User?> UserByEmail(string email) =>
+        await context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-    public void Update(User user)
+    public async Task Update(User user)
     {
         context.Users.Update(user);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
 
-    public void Delete(User user)
+    public async Task Delete(User user)
     {
         context.Users.Remove(user);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
 
-    public void Create(User user)
+    public async Task Create(User user)
     {
         context.Users.Add(user);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
     }
 
-    public IEnumerable<User> AllUsers()
-    {
-        return context.Users.ToList();
-    }
+    public Task<List<User>> AllUsers() => context.Users.ToListAsync();
 }
