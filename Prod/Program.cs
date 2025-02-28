@@ -1,16 +1,18 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Prod.Exceptions;
 using Prod.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
-services.AddControllers();
+services.AddControllers(o => o.Filters.Add<ExceptionFilter>());
 
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
@@ -40,7 +42,19 @@ services.AddOpenTelemetry()
         options.AddAspNetCoreInstrumentation();
     });
 
+services.AddHttpLogging(o =>
+    o.LoggingFields = HttpLoggingFields.RequestMethod
+                      | HttpLoggingFields.RequestPath
+                      | HttpLoggingFields.ResponseStatusCode
+                      | HttpLoggingFields.Duration);
 builder.Logging.AddSerilog().AddOpenTelemetry();
+
+services.AddSingleton<IJwtService, JwtService>();
+services.ConfigureOptions<JwtBearerOptionsConfiguration>();
+services.AddAuthorization();
+services.AddAuthentication().AddJwtBearer();
+
+services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

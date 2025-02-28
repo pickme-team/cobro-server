@@ -5,3 +5,4 @@ riderModule.iml
 /_ReSharper.Caches/
 .idea
 Prod/.env
+Prod.sln.DotSettings.user
