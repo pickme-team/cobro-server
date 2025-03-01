@@ -1,9 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Prod.Exceptions;
 using Prod.Models.Database;
 
 namespace Prod.Services;
 
-class OfficeZoneSeatsService(ProdContext context)
+class OfficeZoneSeatsService(ProdContext context) : IOfficeZoneSeatsService
 {
     public async Task AddSeat(Guid zoneId, OfficeSeat seat)
     {
@@ -23,6 +24,11 @@ class OfficeZoneSeatsService(ProdContext context)
         if (zone is not OfficeZone officeZone)
             throw new NotFoundException("Офисной зоны с таким id не существует");
         
+        var book = await context.Books.FirstOrDefaultAsync(b => seat.Books.Contains(b));
+        if (book == null) 
+            throw new NotFoundException("Места с таким id не существует");
+        
+        book.Status = Status.Canceled;
         officeZone.Seats.Remove(seat);
         await context.SaveChangesAsync();
     }

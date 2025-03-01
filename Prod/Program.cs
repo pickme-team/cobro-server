@@ -59,6 +59,7 @@ services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();
 services.AddScoped<IBookService, BookService>();
 services.AddScoped<IPlaceService, PlaceService>();
+services.AddScoped<IOfficeZoneSeatsService, OfficeZoneSeatsService>();
 
 var app = builder.Build();
 

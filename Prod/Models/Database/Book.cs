@@ -7,7 +7,8 @@ public enum Status
 {
     Active,
     Inactive,
-    Pending
+    Pending,
+    Canceled
 }
 
 public class Book
