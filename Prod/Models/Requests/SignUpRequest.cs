@@ -2,11 +2,29 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Prod.Models.Requests;
 
+/// <summary>
+/// Запрос на регистрацию пользователя.
+/// </summary>
 public class SignUpRequest
 {
-    [Required] public string Name { get; init; }
+    /// <summary>
+    /// Имя пользователя.
+    /// </summary>
+    /// <example>John Doe</example>
+    [Required]
+    public string Name { get; init; }
 
-    [Required] [Email] public string Email { get; init; }
+    /// <summary>
+    /// Email пользователя.
+    /// </summary>
+    /// <example>john.doe@example.com</example>
+    [Required, Email]
+    public string Email { get; init; }
 
-    [Required] [Password] public string Password { get; init; }
+    /// <summary>
+    /// Пароль пользователя.
+    /// </summary>
+    /// <example>StrongPassword123!</example>
+    [Required]
+    public string Password { get; init; }
 }
