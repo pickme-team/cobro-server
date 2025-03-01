@@ -2,7 +2,7 @@ using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class PlaceService(ProdContext context)
+public class PlaceService(ProdContext context) : IPlaceService
 {
     public async Task Update(Place place)
     {

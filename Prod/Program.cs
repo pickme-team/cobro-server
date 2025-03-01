@@ -59,6 +59,7 @@ services.AddAuthentication().AddJwtBearer();
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();
 services.AddScoped<IBookService, BookService>();
+services.AddScoped<IPlaceService, PlaceService>();
 
 var app = builder.Build();
 
