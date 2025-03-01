@@ -11,25 +11,56 @@ public class ZoneService(ProdContext context) : IZoneService
 
     public async Task<Zone> Create(string type, ZoneCreateRequest zone)
     {
-        var baseZone = new Zone
-        {
-            Name = zone.Name,
-            Description = zone.Description,
-            Capacity = zone.Capacity,
-            Class = zone.Class,
-            XCoordinate = zone.XCoordinate,
-            YCoordinate = zone.YCoordinate,
-            Width = zone.Width,
-            Height = zone.Height,
-            ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList()
-        };
-
         var entity = type switch
         {
-            "office" => new OfficeZone(baseZone),
-            "open" => new OpenZone(baseZone),
-            "talkroom" => new TalkroomZone(baseZone),
-            "misc" => baseZone,
+            "office" => new OfficeZone
+            {
+                Name = zone.Name,
+                Description = zone.Description,
+                Capacity = zone.Capacity,
+                Class = zone.Class,
+                XCoordinate = zone.XCoordinate,
+                YCoordinate = zone.YCoordinate,
+                Width = zone.Width,
+                Height = zone.Height,
+                ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList(),
+            },
+            "open" => new OpenZone
+            {
+                Name = zone.Name,
+                Description = zone.Description,
+                Capacity = zone.Capacity,
+                Class = zone.Class,
+                XCoordinate = zone.XCoordinate,
+                YCoordinate = zone.YCoordinate,
+                Width = zone.Width,
+                Height = zone.Height,
+                ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList(),
+            },
+            "talkroom" => new TalkroomZone
+            {
+                Name = zone.Name,
+                Description = zone.Description,
+                Capacity = zone.Capacity,
+                Class = zone.Class,
+                XCoordinate = zone.XCoordinate,
+                YCoordinate = zone.YCoordinate,
+                Width = zone.Width,
+                Height = zone.Height,
+                ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList(),
+            },
+            "misc" => new Zone
+            {
+                Name = zone.Name,
+                Description = zone.Description,
+                Capacity = zone.Capacity,
+                Class = zone.Class,
+                XCoordinate = zone.XCoordinate,
+                YCoordinate = zone.YCoordinate,
+                Width = zone.Width,
+                Height = zone.Height,
+                ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList()
+            },
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
 
