@@ -34,7 +34,7 @@ test:
   script:
     - echo "Running unit tests..."
     - dotnet test $TEST_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
-    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
+    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION
   dependencies:
     - build
 
