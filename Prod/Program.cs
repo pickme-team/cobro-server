@@ -4,7 +4,6 @@ using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prod.Exceptions;
-using Prod.Models.Database;
 using Prod.Services;
 using Serilog;
 
