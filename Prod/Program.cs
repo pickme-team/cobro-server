@@ -1,5 +1,7 @@
+using System.Reflection;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -13,7 +15,25 @@ var services = builder.Services;
 services.AddControllers(o => o.Filters.Add<ExceptionFilter>());
 
 services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
+services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "1.0.0",
+        Title = "so",
+    });
+    var executingAssembly = Assembly.GetExecutingAssembly();
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{executingAssembly.GetName().Name}.xml"));
+
+    var referencedProjectsXmlDocPaths = executingAssembly.GetReferencedAssemblies()
+        .Where(assembly => assembly.Name != null && assembly.Name.StartsWith("My.Example.Project", StringComparison.InvariantCultureIgnoreCase))
+        .Select(assembly => Path.Combine(AppContext.BaseDirectory, $"{assembly.Name}.xml"))
+        .Where(path => File.Exists(path));
+    foreach (var xmlDocPath in referencedProjectsXmlDocPaths)
+    {
+        options.IncludeXmlComments(xmlDocPath);
+    }
+});
 
 services.AddDbContext<ProdContext>(o =>
     o.UseNpgsql(new NpgsqlConnectionStringBuilder
