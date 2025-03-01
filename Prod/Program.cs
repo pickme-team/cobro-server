@@ -20,7 +20,7 @@ services.AddDbContext<ProdContext>(o =>
     o.UseNpgsql(new NpgsqlConnectionStringBuilder
         {
             Host = "postgres",
-            Port = 5432,
+            Port = 8050,
             Database = builder.Configuration["POSTGRES_DB"],
             Username = builder.Configuration["POSTGRES_USER"],
             Password = builder.Configuration["POSTGRES_PASSWORD"]

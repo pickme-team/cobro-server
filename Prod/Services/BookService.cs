@@ -32,13 +32,36 @@ public class BookService(ProdContext context) : IBookService
         await context.SaveChangesAsync();
     }
 
-    public Task BookPlace(Guid placeId, Guid userId, BookRequest req)
+    public async Task BookPlace(Guid placeId, Guid userId, BookRequest req)
     {
-        throw new NotImplementedException();
+        var place = await context.Places.Include(r => r.Books).SingleAsync(r => r.Id == placeId);
+        var overlaps = place.Books.Any(b => req.From < b.End && b.Start < req.To);
+        if (overlaps) throw new ForbiddenException("Not available for this time");
+
+        place.Books.Add(new PlaceBook
+        {
+            Start = req.From,
+            End = req.To,
+            UserId = userId,
+            Description = req.Description,
+            Status = Status.Inactive
+        });
+        await context.SaveChangesAsync();
     }
 
-    public Task BookSpace(Guid userId, BookRequest req)
+    public async Task BookSpace(Guid spaceId, Guid userId, BookRequest req)
     {
-        throw new NotImplementedException();
+        var space = await context.Spaces.SingleAsync(s => s.Id == spaceId);
+        var spaceTimespans = await context.Entry(space)
+            .Collection(s => s.Books)
+            .Query()
+            .Select(s => new { s.Start, s.End })
+            .ToListAsync();
+        var placeTimespans = await context.Entry(space)
+            .Collection(s => s.Places)
+            .Query()
+            .SelectMany(p => p.Books)
+            .Select(b => new { b.Start, b.End })
+            .ToListAsync();
     }
 }

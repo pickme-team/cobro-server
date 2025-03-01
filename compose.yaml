@@ -16,7 +16,7 @@
     env_file:
       - Prod/.env
     ports:
-      - "5432:5432"
+      - "8050:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -24,7 +24,7 @@
       interval: 3s
       timeout: 10s
       retries: 5
-      
+  
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -32,13 +32,13 @@
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "9090:9090"
+      - "8051:9090"
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
-      - "3000:3000"
+      - "8052:3000"
     env_file:
       - Prod/.env
     volumes:
