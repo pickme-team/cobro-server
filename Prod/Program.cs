@@ -20,7 +20,7 @@ services.AddDbContext<ProdContext>(o =>
     o.UseNpgsql(new NpgsqlConnectionStringBuilder
         {
             Host = "postgres",
-            Port = 8050,
+            Port = 5432,
             Database = builder.Configuration["POSTGRES_DB"],
             Username = builder.Configuration["POSTGRES_USER"],
             Password = builder.Configuration["POSTGRES_PASSWORD"]
@@ -76,12 +76,6 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ProdContext>();
     context.Database.EnsureCreated();
-
-    if (!context.Count.Any())
-    {
-        context.Count.Add(new PlaceCount { Count = 0 });
-        context.SaveChanges();
-    }
 }
 
 app.Run();

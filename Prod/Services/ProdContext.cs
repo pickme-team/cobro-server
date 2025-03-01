@@ -9,12 +9,7 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<Book> Books { get; set; }
 
-    public DbSet<Room> Rooms { get; set; }
-
-    public DbSet<Space> Spaces { get; set; }
-
-    public DbSet<Place> Places { get; set; }
-    public DbSet<PlaceCount> Count { get; set; }
+    public DbSet<Zone> Zones { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,8 +18,14 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
         modelBuilder.Entity<Book>()
             .HasDiscriminator<string>("Type")
-            .HasValue<PlaceBook>("Place")
-            .HasValue<RoomBook>("Room")
-            .HasValue<SpaceBook>("Space");
+            .HasValue<OfficeBook>("Office")
+            .HasValue<OpenBook>("Open")
+            .HasValue<TalkroomBook>("Talkroom");
+
+        modelBuilder.Entity<Zone>()
+            .HasDiscriminator<string>("Type")
+            .HasValue<OfficeZone>("Office")
+            .HasValue<OpenZone>("Open")
+            .HasValue<TalkroomZone>("Talkroom");
     }
 }
