@@ -114,7 +114,7 @@ app.UseSwaggerUI();
 
 app.MapPrometheusScrapingEndpoint();
 app.UseHttpLogging();
-// app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging();
 
 app.MapControllers();
 
