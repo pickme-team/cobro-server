@@ -69,7 +69,7 @@ deploy:
   script:
     - scp -o StrictHostKeyChecking=no compose.yaml "$ENV_SSH_USER@$ENV_SSH_HOST:/home/ubuntu/compose.yaml"
     - ssh -o StrictHostKeyChecking=no "$ENV_SSH_USER@$ENV_SSH_HOST" "
-      echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin' &&
+      echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin &&
       docker compose -f /home/ubuntu/compose.yaml down &&
       docker compose -f /home/ubuntu/compose.yaml pull &&
       docker compose -f /home/ubuntu/compose.yaml up -d
