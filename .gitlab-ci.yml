@@ -5,6 +5,7 @@ stages:
   - test
   - publish
   - deploy
+  - integration-test
 
 variables:
   PROJECT_NAME: "Prod"
