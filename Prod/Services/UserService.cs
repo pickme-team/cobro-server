@@ -24,8 +24,9 @@ public class UserService(ProdContext context, IConfiguration configuration) : IU
 
     public async Task Create(User user)
     {
-        if (user.Email.EndsWith(configuration["CORPDOMAIN"] is null ? "isntrui.ru" : configuration["CORPDOMAIN"]!)) user.Role = Role.INTERNAL;
-        else user.Role = Role.CLIENT;
+        user.Role = 
+            user.Email.EndsWith(configuration["CORPDOMAIN"] ?? "isntrui.ru") ? 
+                Role.INTERNAL : Role.CLIENT;
         context.Users.Add(user);
         await context.SaveChangesAsync();
     }
