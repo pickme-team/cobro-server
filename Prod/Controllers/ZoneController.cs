@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Prod.Models.Database;
+using Prod.Models.Requests;
 using Prod.Services;
 
 namespace Prod.Controllers;
@@ -22,6 +23,6 @@ public class ZoneController(IZoneService zoneService) : ControllerBase
     public Task<Zone> Add(
         [FromQuery] [Required] [AllowedValues("office", "open", "talkroom")]
         string type,
-        [FromBody] Zone zone) =>
-        zoneService.Create(type, zone);
+        [FromBody] ZoneCreateRequest req) =>
+        zoneService.Create(type, req);
 }
