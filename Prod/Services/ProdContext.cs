@@ -11,6 +11,8 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<OfficeSeat> OfficeSeats { get; set; }
 
+    public DbSet<ZoneTag> ZoneTags { get; set; }
+
     public DbSet<Zone> Zones { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
