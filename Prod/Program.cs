@@ -26,7 +26,8 @@ services.AddSwaggerGen(options =>
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{executingAssembly.GetName().Name}.xml"));
 
     var referencedProjectsXmlDocPaths = executingAssembly.GetReferencedAssemblies()
-        .Where(assembly => assembly.Name != null && assembly.Name.StartsWith("My.Example.Project", StringComparison.InvariantCultureIgnoreCase))
+        .Where(assembly => assembly.Name != null &&
+                           assembly.Name.StartsWith("My.Example.Project", StringComparison.InvariantCultureIgnoreCase))
         .Select(assembly => Path.Combine(AppContext.BaseDirectory, $"{assembly.Name}.xml"))
         .Where(path => File.Exists(path));
     foreach (var xmlDocPath in referencedProjectsXmlDocPaths)
@@ -80,6 +81,7 @@ services.AddScoped<IUserService, UserService>();
 services.AddScoped<IBookService, BookService>();
 services.AddScoped<IPlaceService, PlaceService>();
 services.AddScoped<IOfficeZoneSeatsService, OfficeZoneSeatsService>();
+services.AddScoped<IZoneService, ZoneService>();
 
 var app = builder.Build();
 
