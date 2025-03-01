@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Prod.Models.Database;
 using Prod.Services;
@@ -16,5 +15,12 @@ public class PlaceController(PlaceService placeService) : ControllerBase
     {
         var place = await placeService.PlaceById(id);
         return place is null ? NotFound() : Ok(place);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult> UpdatePlace([FromBody] Place place)
+    {
+        await placeService.Update(place);
+        return Created();
     }
 }
