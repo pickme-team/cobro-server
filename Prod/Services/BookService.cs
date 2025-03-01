@@ -116,4 +116,12 @@ public class BookService(ProdContext context) : IBookService
         });
         await context.SaveChangesAsync();
     }
+
+    public async Task<Book> Delete(Guid guid)
+    {
+        Book? book = await context.Books.FindAsync(guid);
+        if (book is null) throw new ArgumentException();
+        context.Books.Remove(book);
+        return book;
+    }
 }
