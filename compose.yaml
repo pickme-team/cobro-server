@@ -45,7 +45,45 @@
       - ./grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
 
+  jaeger:
+    restart: always
+    image: jaegertracing/all-in-one:1.52
+    depends_on:
+      - elasticsearch
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+    ports:
+      - "8070:4317"
+      - "8071:16686"
+      - "8072:4318"
+
+  elasticsearch:
+    restart: always
+    image: elasticsearch:7.17.28
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elasticsearch/conf.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "8073:9200"
+
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: loki
+    ports:
+      - "8074:3100"
+    env_file:
+      - Prod/.env
+    volumes:
+      - ./loki.yml:/etc/loki/loki.yml
+      - loki_data:/etc/loki
+
 volumes:
   postgres_data:
   grafana_data:
   prometheus_data:
+  loki_data:
+  elasticsearch-data:
