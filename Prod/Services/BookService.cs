@@ -74,10 +74,43 @@ public class BookService(ProdContext context) : IBookService
 
     private async Task BookOpenZone(OpenZone zone, Guid userId, BookRequest req)
     {
-        var timespans = context.Entry(zone)
+        var timespans = await context.Entry(zone)
             .Collection(z => z.Books)
             .Query()
-            .Select(b => new { b.Start, b.End });
+            .Select(b => new { b.Start, b.End })
+            .ToListAsync();
         var capacity = zone.Capacity;
+
+        // true - start
+        var events = timespans
+            .SelectMany(t => new List<(DateTime, bool)> { (t.Start, true), (t.End, false) })
+            .OrderBy(t => t.Item1);
+
+        var overlapCount = 0;
+
+        foreach (var (time, type) in events)
+        {
+            if (type)
+            {
+                overlapCount++;
+                if (overlapCount == capacity && time >= req.From && time <= req.To)
+                    throw new ForbiddenException("Time not available");
+            }
+            else
+            {
+                overlapCount--;
+            }
+        }
+
+        context.Books.Add(new OpenBook
+        {
+            Start = req.From,
+            End = req.To,
+            UserId = userId,
+            Description = req.Description,
+            Status = Status.Active,
+            OpenZone = zone
+        });
+        await context.SaveChangesAsync();
     }
 }

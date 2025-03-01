@@ -31,6 +31,10 @@ public class ExceptionFilter : IExceptionFilter
                 context.Result = new NotFoundResult();
                 break;
 
+            case ForbiddenException:
+                context.Result = new ObjectResult(new { Reason = context.Exception.Message }) { StatusCode = 403 };
+                break;
+
             default:
                 context.ExceptionHandled = false;
                 break;
