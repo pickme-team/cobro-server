@@ -35,6 +35,7 @@ public class BookService(ProdContext context) : IBookService
         var overlaps = await context.Entry(seat)
             .Collection(s => s.Books)
             .Query()
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
             .AnyAsync(b => b.Start < req.To && req.From < b.End);
 
         if (overlaps) throw new ForbiddenException("Time not available");
@@ -45,7 +46,7 @@ public class BookService(ProdContext context) : IBookService
             End = req.To,
             UserId = userId,
             Description = req.Description,
-            Status = Status.Active,
+            Status = Status.Pending,
             OfficeSeat = seat
         });
         await context.SaveChangesAsync();
@@ -56,6 +57,7 @@ public class BookService(ProdContext context) : IBookService
         var overlaps = await context.Entry(zone)
             .Collection(z => z.Books)
             .Query()
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
             .AnyAsync(b => b.Start < req.To && req.From < b.End);
 
         if (overlaps) throw new ForbiddenException("Time not available");
@@ -66,7 +68,7 @@ public class BookService(ProdContext context) : IBookService
             End = req.To,
             UserId = userId,
             Description = req.Description,
-            Status = Status.Active,
+            Status = Status.Pending,
             TalkroomZone = zone
         });
         await context.SaveChangesAsync();
@@ -77,6 +79,7 @@ public class BookService(ProdContext context) : IBookService
         var timespans = await context.Entry(zone)
             .Collection(z => z.Books)
             .Query()
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
             .Select(b => new { b.Start, b.End })
             .ToListAsync();
         var capacity = zone.Capacity;
@@ -108,7 +111,7 @@ public class BookService(ProdContext context) : IBookService
             End = req.To,
             UserId = userId,
             Description = req.Description,
-            Status = Status.Active,
+            Status = Status.Pending,
             OpenZone = zone
         });
         await context.SaveChangesAsync();

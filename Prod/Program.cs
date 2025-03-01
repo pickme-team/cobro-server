@@ -72,7 +72,7 @@ builder.Logging.AddSerilog().AddOpenTelemetry();
 
 services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
-services.AddAuthorization();
+services.AddAuthorization(o => o.AddPolicy("Admin", policy => policy.RequireClaim("admin", "true")));
 services.AddAuthentication().AddJwtBearer();
 
 services.AddScoped<IAuthService, AuthService>();
