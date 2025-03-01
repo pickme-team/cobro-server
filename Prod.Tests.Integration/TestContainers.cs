@@ -42,7 +42,7 @@ public class TestContainers : IAsyncLifetime
     private static readonly PostgreSqlContainer _dbContainer = 
         new PostgreSqlBuilder()
             .WithImage(pgImage)
-            .WithPortBinding(5432, 5432)
+            .WithPortBinding(8059, 5432)
             .WithEnvironment(Envs)
             .WithNetwork(Network)
             .WithNetworkAliases("postgres")

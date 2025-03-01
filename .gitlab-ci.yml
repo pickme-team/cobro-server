@@ -40,14 +40,14 @@ test:
 
 integration-test:
   stage: integration-test
-  script:
-    - echo "Running integration"
-    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION
   image: docker:latest
   services:
     - docker:dind
   before_script: 
     - docker info
+  script:
+    - echo "Running integration"
+    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
   dependencies:
     - test
 
