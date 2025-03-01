@@ -25,7 +25,7 @@ public class BookController(IBookService bookService) : ControllerBase
     public Task BookPlace(Guid id, [FromBody] BookRequest req) =>
         bookService.BookPlace(id, User.Id(), req);
 
-    [HttpPost("space")]
-    public Task BookSpace([FromBody] BookRequest req) =>
-        bookService.BookSpace(User.Id(), req);
+    [HttpPost("space/{id:guid}")]
+    public Task BookSpace(Guid id, [FromBody] BookRequest req) =>
+        bookService.BookSpace(id, User.Id(), req);
 }
