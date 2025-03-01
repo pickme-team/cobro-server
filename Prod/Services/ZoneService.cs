@@ -12,7 +12,7 @@ public class ZoneService(ProdContext context) : IZoneService
     {
         switch (type)
         {
-            case "Office":
+            case "office":
                 context.Zones.Add(new OfficeZone
                 {
                     Name = zone.Name,
@@ -25,7 +25,7 @@ public class ZoneService(ProdContext context) : IZoneService
                     Height = zone.Height,
                 });
                 break;
-            case "Open":
+            case "open":
                 context.Zones.Add(new OpenZone
                 {
                     Name = zone.Name,
@@ -38,7 +38,7 @@ public class ZoneService(ProdContext context) : IZoneService
                     Height = zone.Height,
                 });
                 break;
-            case "Talkroom":
+            case "talkroom":
                 context.Zones.Add(new TalkroomZone
                 {
                     Name = zone.Name,

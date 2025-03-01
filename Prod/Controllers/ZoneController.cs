@@ -20,7 +20,7 @@ public class ZoneController(IZoneService zoneService) : ControllerBase
 
     [HttpPost]
     public Task<Zone> Add(
-        [FromQuery] [Required] [AllowedValues("Office", "Open", "Talkroom")]
+        [FromQuery] [Required] [AllowedValues("office", "open", "talkroom")]
         string type,
         [FromBody] Zone zone) =>
         zoneService.Create(type, zone);
