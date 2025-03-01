@@ -5,10 +5,10 @@ namespace Prod.Models.Database;
 
 public enum Status
 {
-    Active,
-    Inactive,
     Pending,
-    Canceled
+    Active,
+    Cancelled,
+    Ended
 }
 
 public class Book
