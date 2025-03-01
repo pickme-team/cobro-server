@@ -47,7 +47,7 @@ publish:
     - docker info
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
-    - docker build -t "$CI_REGISTRY_IMAGE/prod:latest" ./Prod
+    - docker build -t "$CI_REGISTRY_IMAGE/prod:latest" . -f Prod/Dockerfile
     - docker push "$CI_REGISTRY_IMAGE/prod:latest"
 
 deploy:
