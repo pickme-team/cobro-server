@@ -11,6 +11,8 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<Room> Rooms { get; set; }
 
+    public DbSet<Space> Spaces { get; set; }
+
     public DbSet<PlaceCount> Count { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
