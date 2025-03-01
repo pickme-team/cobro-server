@@ -9,7 +9,7 @@ namespace Prod.Controllers;
 [ApiController]
 [Authorize]
 [Route("zone")]
-public class ZoneController(ZoneService zoneService) : ControllerBase
+public class ZoneController(IZoneService zoneService) : ControllerBase
 {
     [HttpGet]
     public List<Zone> GetAll()

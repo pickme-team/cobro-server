@@ -2,7 +2,7 @@ using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class ZoneService(ProdContext context)
+public class ZoneService(ProdContext context) : IZoneService
 {
     public List<Zone> GetAll() => context.Zones.ToList();
     public async Task<Zone?> Get(Guid id) => await context.Zones.FindAsync(id);
