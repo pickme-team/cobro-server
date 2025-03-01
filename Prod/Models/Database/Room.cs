@@ -12,5 +12,5 @@ public class Room
 
     public int Capacity { get; set; }
 
-    public List<Book> Books { get; set; } = [];
+    public List<RoomBook> Books { get; } = [];
 }
