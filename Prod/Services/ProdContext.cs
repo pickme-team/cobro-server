@@ -14,6 +14,7 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+        modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();
         modelBuilder.Entity<Book>().Property(u => u.Status).HasConversion<string>();
 
         modelBuilder.Entity<Book>()
