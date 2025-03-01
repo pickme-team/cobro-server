@@ -1,9 +1,9 @@
 image: mcr.microsoft.com/dotnet/sdk:9.0
 
 stages:
-#  - build
-#  - test
-#  - publish
+  - build
+  - test
+  - publish
   - deploy
 
 variables:
@@ -17,38 +17,38 @@ variables:
   DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   DOCKER_DRIVER: overlay2
 
-#build:
-#  stage: build
-#  script:
-#    - echo "Restoring dependencies..."
-#    - dotnet restore $PROJECT_NAME
-#    - echo "Building the project..."
-#    - dotnet build $PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-restore
-#  artifacts:
-#    paths:
-#      - $PROJECT_NAME/bin/$BUILD_CONFIGURATION/net9.0/
-#    expire_in: 1 week
+build:
+  stage: build
+  script:
+    - echo "Restoring dependencies..."
+    - dotnet restore $PROJECT_NAME
+    - echo "Building the project..."
+    - dotnet build $PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-restore
+  artifacts:
+    paths:
+      - $PROJECT_NAME/bin/$BUILD_CONFIGURATION/net9.0/
+    expire_in: 1 week
 
-#test:
-#  stage: test
-#  script:
-#    - echo "Running unit tests..."
-#    - dotnet test $TEST_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
-#    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
-#  dependencies:
-#    - build
-#
-#publish:
-#  stage: publish
-#  image: docker:latest
-#  services:
-#    - docker:dind
-#  before_script: 
-#    - docker info
-#  script:
-#    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
-#    - docker build -t "$CI_REGISTRY_IMAGE/prod:latest" . -f Prod/Dockerfile
-#    - docker push "$CI_REGISTRY_IMAGE/prod:latest"
+test:
+  stage: test
+  script:
+    - echo "Running unit tests..."
+    - dotnet test $TEST_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
+    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
+  dependencies:
+    - build
+
+publish:
+  stage: publish
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script: 
+    - docker info
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+    - docker build -t "$CI_REGISTRY_IMAGE/prod:latest" . -f Prod/Dockerfile
+    - docker push "$CI_REGISTRY_IMAGE/prod:latest"
 
 deploy:
   stage: deploy
