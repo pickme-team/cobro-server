@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 
 namespace Prod.Models.Database;
 
@@ -11,6 +13,6 @@ public class User
     [Required] [Email] public string Email { get; set; } = null!;
 
     [Required] [Password] public string Password { get; set; } = null!;
-
+    
     public string? City { get; set; }
 }
