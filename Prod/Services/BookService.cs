@@ -37,6 +37,17 @@ public class BookService(ProdContext context) : IBookService
             .AnyAsync(b => b.Start < req.To && req.From < b.End);
 
         if (overlaps) throw new ForbiddenException("Time not available");
+
+        context.Books.Add(new TalkroomBook
+        {
+            Start = req.From,
+            End = req.To,
+            UserId = userId,
+            Description = req.Description,
+            Status = Status.Active,
+            TalkroomZone = zone
+        });
+        await context.SaveChangesAsync();
     }
 
     private async Task BookOpenZone(OpenZone zone, Guid userId, BookRequest req)
