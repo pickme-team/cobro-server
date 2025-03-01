@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -12,22 +13,15 @@ namespace Prod.Controllers;
 public class ZoneController(IZoneService zoneService) : ControllerBase
 {
     [HttpGet]
-    public List<Zone> GetAll()
-    {
-        return zoneService.GetAll();
-    }
+    public Task<List<Zone>> GetAll() => zoneService.GetAll();
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<Zone>> Get(Guid id)
-    {
-        Zone? zone = await zoneService.Get(id);
-        if (zone is null) return NotFound();
-        return Ok(zone);
-    }
+    public Task<Zone> Get(Guid id) => zoneService.Get(id);
 
     [HttpPost]
-    public async Task<ActionResult<Zone>> Add([FromBody] Zone zone)
-    {
-        return await zoneService.Create(zone);
-    }
+    public Task<Zone> Add(
+        [FromQuery] [Required] [AllowedValues("Office", "Open", "Talkroom")]
+        string type,
+        [FromBody] Zone zone) =>
+        zoneService.Create(type, zone);
 }

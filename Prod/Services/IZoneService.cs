@@ -4,7 +4,7 @@ namespace Prod.Services;
 
 public interface IZoneService
 {
-    List<Zone> GetAll();
-    Task<Zone?> Get(Guid id);
-    Task<Zone> Create(Zone zone);
+    Task<List<Zone>> GetAll();
+    Task<Zone> Get(Guid id);
+    Task<Zone> Create(string type, Zone zone);
 }
