@@ -6,7 +6,7 @@ using Prod.Services;
 namespace Prod.Controllers;
 
 [ApiController]
-[Route("zone")]
+[Route("zone/office")]
 [Authorize(Policy = "Admin")]
 public class OfficeZoneController(IOfficeZoneSeatsService officeZoneSeatsService)
 {
@@ -21,7 +21,7 @@ public class OfficeZoneController(IOfficeZoneSeatsService officeZoneSeatsService
     {
         return await officeZoneSeatsService.GetSeats(zoneId);
     }
-    
+
     [HttpDelete("{id:Guid}/seat/{seatId:Guid}")]
     public async Task RemoveSeat(Guid zoneId, Guid seatId)
     {
