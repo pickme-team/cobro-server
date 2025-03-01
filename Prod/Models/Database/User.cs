@@ -1,8 +1,11 @@
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
-
 namespace Prod.Models.Database;
+
+public enum Role
+{
+    ADMIN,
+    CLIENT,
+    INTERNAL,
+}
 
 public class User
 {
@@ -17,4 +20,6 @@ public class User
     public string? City { get; set; }
 
     public List<Book> Books { get; } = [];
+
+    public Role Role;
 }
