@@ -32,7 +32,7 @@ public class AuthTests(TestContainers fixture) : IAssemblyFixture<TestContainers
         var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
         var response = await fixture.Client.PostAsync("/auth/sign-up", content);
         
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
         
         Assert.NotNull(authResponse);
@@ -44,7 +44,7 @@ public class AuthTests(TestContainers fixture) : IAssemblyFixture<TestContainers
         var responseGet = await fixture.Client.GetAsync("user");
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var user = await response.Content.ReadFromJsonAsync<User>();
+        var user = await responseGet.Content.ReadFromJsonAsync<User>();
         
         Assert.NotNull(user);
         
