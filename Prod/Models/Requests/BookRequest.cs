@@ -6,5 +6,5 @@ public class BookRequest
 
     public DateTime To { get; init; }
 
-    public string Description { get; init; }
+    public string? Description { get; init; }
 }
