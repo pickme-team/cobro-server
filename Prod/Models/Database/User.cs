@@ -8,11 +8,11 @@ public class User
 {
     public Guid Id { get; set; }
 
-    [Required] public string Name { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
-    [Required] [Email] public string Email { get; set; } = null!;
+    public string Email { get; set; } = null!;
 
-    [Required] [Password] public string Password { get; set; } = null!;
-    
+    public string Password { get; set; } = null!;
+
     public string? City { get; set; }
 }

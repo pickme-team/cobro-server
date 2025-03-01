@@ -6,9 +6,11 @@ public class Room
 {
     public Guid Id { get; set; }
 
-    [Required] public string Name { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
-    [Required] public string Description { get; set; } = null!;
+    public string Description { get; set; } = null!;
 
-    [Required] public int Capacity { get; set; }
+    public int Capacity { get; set; }
+
+    public List<Book> Books { get; set; } = [];
 }
