@@ -8,4 +8,7 @@ public class OfficeSeat
     public OfficeZone OfficeZone { get; set; } = null!;
 
     public List<OfficeBook> Books { get; } = [];
+
+    public float X { set; get; }
+    public float Y { set; get; }
 }
