@@ -47,7 +47,7 @@ integration-test:
     - docker info
   script:
     - echo "Running integration"
-    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION
+    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
   dependencies:
     - test
 
