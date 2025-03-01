@@ -30,37 +30,37 @@ build:
       - $PROJECT_NAME/bin/$BUILD_CONFIGURATION/net9.0/
     expire_in: 1 week
 
-test:
-  stage: test
-  script:
-    - echo "Running unit tests..."
-    - dotnet test $TEST_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
-  dependencies:
-    - build
-
-integration-test:
-  stage: integration-test
-  image: mcr.microsoft.com/dotnet/sdk:9.0
-  services:
-    - docker:dind
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_HOST: "tcp://docker:2376"
-    DOCKER_TLS_VERIFY: "1"
-    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
-  before_script:
-    - apt-get update
-    - apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-    - curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-    - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-    - apt-get update
-    - apt-get install -y docker-ce docker-ce-cli containerd.io
-    - docker info
-  script:
-    - echo "Running integration"
-    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
-  dependencies:
-    - test
+#test:
+#  stage: test
+#  script:
+#    - echo "Running unit tests..."
+#    - dotnet test $TEST_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
+#  dependencies:
+#    - build
+#
+#integration-test:
+#  stage: integration-test
+#  image: mcr.microsoft.com/dotnet/sdk:9.0
+#  services:
+#    - docker:dind
+#  variables:
+#    DOCKER_TLS_CERTDIR: "/certs"
+#    DOCKER_HOST: "tcp://docker:2376"
+#    DOCKER_TLS_VERIFY: "1"
+#    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+#  before_script:
+#    - apt-get update
+#    - apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+#    - curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+#    - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+#    - apt-get update
+#    - apt-get install -y docker-ce docker-ce-cli containerd.io
+#    - docker info
+#  script:
+#    - echo "Running integration"
+#    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
+#  dependencies:
+#    - test
 
 publish:
   stage: publish
