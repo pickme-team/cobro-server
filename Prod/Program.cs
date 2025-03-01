@@ -74,7 +74,7 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ProdContext>();
-    context.Database.Migrate();
+    context.Database.EnsureCreated();
 
     if (!context.Count.Any())
     {

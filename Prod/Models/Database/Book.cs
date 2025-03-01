@@ -13,7 +13,7 @@ public enum Status
 public class Book
 {
     public Guid Id { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime Start { get; set; }
     public DateTime End { get; set; }

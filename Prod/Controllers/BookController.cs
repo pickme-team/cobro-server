@@ -19,13 +19,13 @@ public class BookController(IBookService bookService) : ControllerBase
 
     [HttpPost("room/{id:guid}")]
     public Task BookRoom(Guid id, [FromBody] BookRequest req) =>
-        bookService.BookRoom(id, User.Id(), req.From, req.To);
+        bookService.BookRoom(id, User.Id(), req);
 
     [HttpPost("place/{id:guid}")]
     public Task BookPlace(Guid id, [FromBody] BookRequest req) =>
-        bookService.BookPlace(id, User.Id(), req.From, req.To);
+        bookService.BookPlace(id, User.Id(), req);
 
     [HttpPost("space")]
     public Task BookSpace([FromBody] BookRequest req) =>
-        bookService.BookSpace(User.Id(), req.From, req.To);
+        bookService.BookSpace(User.Id(), req);
 }
