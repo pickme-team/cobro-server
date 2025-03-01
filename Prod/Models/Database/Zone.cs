@@ -20,5 +20,6 @@ public class Zone
 
     public float Height { get; set; }
 
+    public string Type { get; set; } = null!;
     public List<ZoneTag> ZoneTags { get; set; } = [];
 }

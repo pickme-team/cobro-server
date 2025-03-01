@@ -2,8 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Prod.Models.Database;
 
-public class OfficeSeat : Zone
+public class OfficeSeat
 {
+    public Guid Id { get; set; }
+
     public Guid OfficeZoneId { get; set; }
     public OfficeZone OfficeZone { get; set; } = null!;
 

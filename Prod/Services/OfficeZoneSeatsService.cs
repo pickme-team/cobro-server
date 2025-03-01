@@ -1,41 +1,50 @@
 using Microsoft.EntityFrameworkCore;
 using Prod.Exceptions;
 using Prod.Models.Database;
+using Prod.Models.Requests;
+using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-class OfficeZoneSeatsService(ProdContext context) : IOfficeZoneSeatsService
+public class OfficeZoneSeatsService(ProdContext context) : IOfficeZoneSeatsService
 {
-    public async Task<OfficeSeat> AddSeat(Guid zoneId, OfficeSeat seat)
+    public async Task<OfficeSeatResponse> AddSeat(Guid zoneId, OfficeSeatCreateRequest req)
     {
         var zone = await context.Zones.FindAsync(zoneId);
 
         if (zone is not OfficeZone officeZone)
             throw new NotFoundException("Офисной зоны с таким id не существует");
 
-        seat.OfficeZone = officeZone;
+        var seat = new OfficeSeat
+        {
+            OfficeZoneId = zoneId,
+            X = req.X,
+            Y = req.Y,
+        };
         context.OfficeSeats.Add(seat);
         await context.SaveChangesAsync();
 
-        return seat;
+        return OfficeSeatResponse.From(seat);
     }
 
-    public async Task<List<OfficeSeat>> AddSeats(Guid zoneId, List<OfficeSeat> seats)
+    public async Task<List<OfficeSeatResponse>> AddSeats(Guid zoneId, List<OfficeSeatCreateRequest> req)
     {
         var zone = await context.Zones.FindAsync(zoneId);
 
         if (zone is not OfficeZone officeZone)
             throw new NotFoundException("Офисной зоны с таким id не существует");
 
-        foreach (var officeSeat in seats)
+        var seats = req.Select(r => new OfficeSeat
         {
-            officeSeat.OfficeZone = officeZone;
-        }
+            OfficeZoneId = zoneId,
+            X = r.X,
+            Y = r.Y
+        }).ToList();
 
         context.OfficeSeats.AddRange(seats);
         await context.SaveChangesAsync();
 
-        return seats;
+        return seats.Select(OfficeSeatResponse.From).ToList();
     }
 
     public async Task RemoveSeat(Guid zoneId, Guid seatId)
@@ -45,27 +54,37 @@ class OfficeZoneSeatsService(ProdContext context) : IOfficeZoneSeatsService
         if (zone is not OfficeZone officeZone)
             throw new NotFoundException("Офисной зоны с таким id не существует");
 
-        var seat = officeZone.Seats.FirstOrDefault(s => s.Id == seatId);
+        var seat = context.Entry(officeZone)
+            .Collection(z => z.Seats)
+            .Query()
+            .Include(s => s.Books)
+            .FirstOrDefault(s => s.Id == seatId);
         if (seat is null)
             throw new NotFoundException("Зона не имеет такого места");
 
-        var book = await context.Books.FirstOrDefaultAsync(b => seat.Books.Contains(b));
-        if (book != null)
+        foreach (var book in seat.Books)
         {
-            book.Status = Status.Ended;
-            officeZone.Seats.Remove(seat);
+            if (book.Status is Status.Active or Status.Pending)
+                book.Status = Status.Ended;
         }
+
+        context.OfficeSeats.Remove(seat);
 
         await context.SaveChangesAsync();
     }
 
-    public async Task<List<OfficeSeat>> GetSeats(Guid zoneId)
+    public async Task<List<OfficeSeatResponse>> GetSeats(Guid zoneId)
     {
         var zone = await context.Zones.FindAsync(zoneId);
 
         if (zone is not OfficeZone officeZone)
             throw new NotFoundException("Офисной зоны с таким id не существует");
 
-        return officeZone.Seats;
+        var entities = await context.Entry(officeZone)
+            .Collection(z => z.Seats)
+            .Query()
+            .ToListAsync();
+
+        return entities.Select(OfficeSeatResponse.From).ToList();
     }
 }

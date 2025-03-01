@@ -28,7 +28,7 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
             .HasValue<TalkroomBook>("Talkroom");
 
         modelBuilder.Entity<Zone>()
-            .HasDiscriminator<string>("Type")
+            .HasDiscriminator(z => z.Type)
             .HasValue<OfficeZone>("Office")
             .HasValue<OpenZone>("Open")
             .HasValue<TalkroomZone>("Talkroom")
