@@ -7,7 +7,7 @@ using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-public class AuthService(ProdContext context, IJwtService jwtService) : IAuthService
+public class AuthService(ProdContext context, IJwtService jwtService, IConfiguration configuration) : IAuthService
 {
     private readonly PasswordHasher<string> _passwordHasher = new();
 
@@ -18,7 +18,10 @@ public class AuthService(ProdContext context, IJwtService jwtService) : IAuthSer
         {
             Name = request.Name,
             Email = request.Email,
-            Password = hash
+            Password = hash,
+            Role = request.Email.EndsWith(configuration["CORPDOMAIN"] ?? "isntrui.ru") ? 
+                    Role.INTERNAL : Role.CLIENT
+
         };
         context.Users.Add(user);
         await context.SaveChangesAsync();
