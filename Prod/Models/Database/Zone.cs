@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace Prod.Models.Database;
 
 public class Zone

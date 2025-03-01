@@ -26,9 +26,9 @@ public class ZoneService(ProdContext context) : IZoneService
 
         var entity = type switch
         {
-            "office" => (OfficeZone)baseZone,
-            "open" => (OpenZone)baseZone,
-            "talkroom" => (TalkroomZone)baseZone,
+            "office" => new OfficeZone(baseZone),
+            "open" => new OpenZone(baseZone),
+            "talkroom" => new TalkroomZone(baseZone),
             "misc" => baseZone,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
