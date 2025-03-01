@@ -5,6 +5,7 @@ stages:
   - test
   - publish
   - deploy
+  - integration-test
 
 variables:
   PROJECT_NAME: "Prod"
@@ -34,9 +35,21 @@ test:
   script:
     - echo "Running unit tests..."
     - dotnet test $TEST_PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-build
-    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION
   dependencies:
     - build
+
+integration-test:
+  stage: integration-test
+  script:
+    - echo "Running integration"
+    - dotnet test $TEST_INTG_PROJECT_NAME --configuration $BUILD_CONFIGURATION
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script: 
+    - docker info
+  dependencies:
+    - test
 
 publish:
   stage: publish
