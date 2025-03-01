@@ -10,21 +10,19 @@ namespace Prod.Controllers;
 [Authorize(Policy = "Admin")]
 public class OfficeZoneController(IOfficeZoneSeatsService officeZoneSeatsService)
 {
-    [HttpPost("{id:Guid}/seat")]
-    public async Task<OfficeSeat> AddSeat(Guid zoneId, [FromBody] OfficeSeat seat)
-    {
-        return await officeZoneSeatsService.AddSeat(zoneId, seat);
-    }
+    [HttpPost("{zoneId:guid}/seat")]
+    public Task<OfficeSeat> AddSeat(Guid zoneId, [FromBody] OfficeSeat seat) =>
+        officeZoneSeatsService.AddSeat(zoneId, seat);
 
-    [HttpGet("{id:Guid}/seat")]
-    public async Task<IEnumerable<OfficeSeat>> GetSeats(Guid zoneId)
-    {
-        return await officeZoneSeatsService.GetSeats(zoneId);
-    }
+    [HttpPost("{zoneId:guid}/seats")]
+    public Task<List<OfficeSeat>> AddSeats(Guid zoneId, [FromBody] List<OfficeSeat> seats) =>
+        officeZoneSeatsService.AddSeats(zoneId, seats);
 
-    [HttpDelete("{id:Guid}/seat/{seatId:Guid}")]
-    public async Task RemoveSeat(Guid zoneId, Guid seatId)
-    {
-        await officeZoneSeatsService.RemoveSeat(zoneId, seatId);
-    }
+    [HttpGet("{zoneId:guid}/seats")]
+    public Task<List<OfficeSeat>> GetSeats(Guid zoneId) =>
+        officeZoneSeatsService.GetSeats(zoneId);
+
+    [HttpDelete("{zoneId:guid}/seat/{seatId:guid}")]
+    public Task RemoveSeat(Guid zoneId, Guid seatId) =>
+        officeZoneSeatsService.RemoveSeat(zoneId, seatId);
 }
