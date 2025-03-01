@@ -27,6 +27,28 @@ public class BookService(ProdContext context) : IBookService
 
     private async Task BookSeat(OfficeZone zone, Guid seatId, Guid userId, BookRequest req)
     {
+        var seat = await context.Entry(zone)
+            .Collection(x => x.Seats)
+            .Query()
+            .SingleAsync(x => x.Id == seatId);
+
+        var overlaps = await context.Entry(seat)
+            .Collection(s => s.Books)
+            .Query()
+            .AnyAsync(b => b.Start < req.To && req.From < b.End);
+
+        if (overlaps) throw new ForbiddenException("Time not available");
+
+        context.Books.Add(new OfficeBook
+        {
+            Start = req.From,
+            End = req.To,
+            UserId = userId,
+            Description = req.Description,
+            Status = Status.Active,
+            OfficeSeat = seat
+        });
+        await context.SaveChangesAsync();
     }
 
     private async Task BookTalkroomZone(TalkroomZone zone, Guid userId, BookRequest req)
