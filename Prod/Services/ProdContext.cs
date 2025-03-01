@@ -9,6 +9,8 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<Book> Books { get; set; }
 
+    public DbSet<OfficeSeat> OfficeSeats { get; set; }
+
     public DbSet<Zone> Zones { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

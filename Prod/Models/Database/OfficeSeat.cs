@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Prod.Models.Database;
 
 public class OfficeSeat : Zone
@@ -7,6 +9,6 @@ public class OfficeSeat : Zone
 
     public List<OfficeBook> Books { get; } = [];
 
-    public float X { set; get; }
-    public float Y { set; get; }
+    [Required] public float X { set; get; }
+    [Required] public float Y { set; get; }
 }
