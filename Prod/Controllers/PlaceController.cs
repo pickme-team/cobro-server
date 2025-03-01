@@ -6,7 +6,7 @@ using Prod.Services;
 namespace Prod.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "Admin")]
 [Route("place")]
 public class PlaceController(PlaceService placeService) : ControllerBase
 {

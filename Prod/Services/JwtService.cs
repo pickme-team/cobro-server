@@ -40,7 +40,11 @@ public class JwtService : IJwtService
         var jwt = new JwtSecurityToken(
             issuer: Issuer,
             audience: Audience,
-            claims: [new Claim(ClaimsIdentity.DefaultNameClaimType, user.Id.ToString())],
+            claims:
+            [
+                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Id.ToString()),
+                new Claim("admin", (user.Role == Role.ADMIN).ToString())
+            ],
             notBefore: DateTime.UtcNow,
             expires: DateTime.UtcNow.AddDays(30),
             signingCredentials: _signingCredentials
