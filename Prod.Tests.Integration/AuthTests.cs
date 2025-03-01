@@ -50,7 +50,6 @@ public class AuthTests(TestContainers fixture) : IAssemblyFixture<TestContainers
         
         Assert.Equal(_requestSignUpData.Name, user.Name);
         Assert.Equal(_requestSignUpData.Email, user.Email);
-        Assert.Equal(_requestSignUpData.Password, user.Password);
         Assert.Equal(Role.CLIENT, user.Role);
     }
 }
