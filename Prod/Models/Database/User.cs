@@ -21,5 +21,5 @@ public class User
 
     public List<Book> Books { get; } = [];
 
-    public Role Role;
+    public Role Role = Role.CLIENT;
 }
