@@ -22,6 +22,8 @@ public class BookService(ProdContext context) : IBookService
             case OpenZone openZone:
                 await BookOpenZone(openZone, userId, bookRequest);
                 break;
+            default:
+                throw new ForbiddenException("Not a bookable zone");
         }
     }
 

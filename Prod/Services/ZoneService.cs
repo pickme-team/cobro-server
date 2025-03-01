@@ -11,44 +11,25 @@ public class ZoneService(ProdContext context) : IZoneService
 
     public async Task<Zone> Create(string type, ZoneCreateRequest zone)
     {
-        Zone entity = type switch
+        var baseZone = new Zone
         {
-            "office" => new OfficeZone
-            {
-                Name = zone.Name,
-                Description = zone.Description,
-                Capacity = zone.Capacity,
-                Class = zone.Class,
-                XCoordinate = zone.XCoordinate,
-                YCoordinate = zone.YCoordinate,
-                Width = zone.Width,
-                Height = zone.Height,
-                ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList()
-            },
-            "open" => new OpenZone
-            {
-                Name = zone.Name,
-                Description = zone.Description,
-                Capacity = zone.Capacity,
-                Class = zone.Class,
-                XCoordinate = zone.XCoordinate,
-                YCoordinate = zone.YCoordinate,
-                Width = zone.Width,
-                Height = zone.Height,
-                ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList()
-            },
-            "talkroom" => new TalkroomZone
-            {
-                Name = zone.Name,
-                Description = zone.Description,
-                Capacity = zone.Capacity,
-                Class = zone.Class,
-                XCoordinate = zone.XCoordinate,
-                YCoordinate = zone.YCoordinate,
-                Width = zone.Width,
-                Height = zone.Height,
-                ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList()
-            },
+            Name = zone.Name,
+            Description = zone.Description,
+            Capacity = zone.Capacity,
+            Class = zone.Class,
+            XCoordinate = zone.XCoordinate,
+            YCoordinate = zone.YCoordinate,
+            Width = zone.Width,
+            Height = zone.Height,
+            ZoneTags = zone.Tags.Select(t => new ZoneTag { Tag = t }).ToList()
+        };
+
+        var entity = type switch
+        {
+            "office" => (OfficeZone)baseZone,
+            "open" => (OpenZone)baseZone,
+            "talkroom" => (TalkroomZone)baseZone,
+            "misc" => baseZone,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
 

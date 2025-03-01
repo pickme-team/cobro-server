@@ -31,6 +31,7 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
             .HasDiscriminator<string>("Type")
             .HasValue<OfficeZone>("Office")
             .HasValue<OpenZone>("Open")
-            .HasValue<TalkroomZone>("Talkroom");
+            .HasValue<TalkroomZone>("Talkroom")
+            .HasValue<Zone>("Misc");
     }
 }
