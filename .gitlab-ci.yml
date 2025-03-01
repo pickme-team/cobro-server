@@ -60,11 +60,11 @@ deploy:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan "$ENV_SSH_HOST" >> ~/.ssh/known_hosts
   script:
-    - scp -o StrictHostKeyChecking=no docker-compose.yml "$ENV_SSH_USER@$ENV_SSH_HOST:/app/docker-compose.yml"
+    - scp -o StrictHostKeyChecking=no compose.yaml "$ENV_SSH_USER@$ENV_SSH_HOST:/compose.yaml"
     - ssh -o StrictHostKeyChecking=no "$ENV_SSH_USER@$ENV_SSH_HOST" "
       echo '$CI_REGISTRY_PASSWORD' | docker login -u '$CI_REGISTRY_USER' --password-stdin '$CI_REGISTRY' &&
-      docker compose -f /app/docker-compose.yml down &&
-      docker compose -f /app/docker-compose.yml pull &&
-      docker compose -f /app/docker-compose.yml up -d
+      docker compose down &&
+      docker compose pull &&
+      docker compose up -d
       "
   
