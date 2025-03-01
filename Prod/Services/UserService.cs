@@ -3,7 +3,7 @@ using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class UserService(ProdContext context) : IUserService
+public class UserService(ProdContext context, IConfiguration configuration) : IUserService
 {
     public async Task<User?> UserById(Guid id) => await context.Users.FindAsync(id);
 
@@ -24,6 +24,9 @@ public class UserService(ProdContext context) : IUserService
 
     public async Task Create(User user)
     {
+        user.Role = 
+            user.Email.EndsWith(configuration["CORPDOMAIN"] ?? "isntrui.ru") ? 
+                Role.INTERNAL : Role.CLIENT;
         context.Users.Add(user);
         await context.SaveChangesAsync();
     }
