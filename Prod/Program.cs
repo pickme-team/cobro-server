@@ -26,13 +26,16 @@ services.AddDbContext<ProdContext>(o =>
         }.ConnectionString,
         options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
+services.AddMetrics();
 services.AddOpenTelemetry()
     .WithMetrics(options =>
     {
-        options.AddAspNetCoreInstrumentation();
-        options.AddHttpClientInstrumentation();
-        options.AddMeter("Microsoft.AspNetCore.Hosting");
-        options.AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+        options.AddPrometheusExporter();
+        options.AddRuntimeInstrumentation()
+            .AddMeter("Microsoft.AspNetCore.Hosting")
+            .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+            .AddMeter("System.Net.Http")
+            .AddMeter("Prod");
     })
     .WithTracing(options =>
     {
@@ -61,6 +64,8 @@ app.UseHttpsRedirection();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapPrometheusScrapingEndpoint();
 
 app.MapControllers();
 
