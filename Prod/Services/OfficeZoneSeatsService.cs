@@ -6,30 +6,38 @@ namespace Prod.Services;
 
 class OfficeZoneSeatsService(ProdContext context) : IOfficeZoneSeatsService
 {
-    public async Task AddSeat(Guid zoneId, OfficeSeat seat)
+    public async Task<OfficeSeat> AddSeat(Guid zoneId, OfficeSeat seat)
     {
         var zone = await context.Zones.FindAsync(zoneId);
 
         if (zone is not OfficeZone officeZone)
             throw new NotFoundException("Офисной зоны с таким id не существует");
         
+        seat.Id = Guid.NewGuid();
         officeZone.Seats.Add(seat);
         await context.SaveChangesAsync();
+        
+        return seat;
     }
 
-    public async Task RemoveSeat(Guid zoneId, OfficeSeat seat)
+    public async Task RemoveSeat(Guid zoneId, Guid seatId)
     {
         var zone = await context.Zones.FindAsync(zoneId);
 
         if (zone is not OfficeZone officeZone)
             throw new NotFoundException("Офисной зоны с таким id не существует");
         
-        var book = await context.Books.FirstOrDefaultAsync(b => seat.Books.Contains(b));
-        if (book == null) 
-            throw new NotFoundException("Места с таким id не существует");
+        var seat = officeZone.Seats.FirstOrDefault(s => s.Id == seatId);
+        if (seat is null)
+            throw new NotFoundException("Зона не имеет такого места");
         
-        book.Status = Status.Canceled;
-        officeZone.Seats.Remove(seat);
+        var book = await context.Books.FirstOrDefaultAsync(b => seat.Books.Contains(b));
+        if (book != null)
+        {
+            book.Status = Status.Ended;
+            officeZone.Seats.Remove(seat);
+        }
+        
         await context.SaveChangesAsync();
     }
     

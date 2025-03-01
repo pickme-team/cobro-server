@@ -4,7 +4,7 @@ namespace Prod.Services;
 
 public interface IOfficeZoneSeatsService
 {
-    Task AddSeat(Guid zoneId, OfficeSeat seat);
-    Task RemoveSeat(Guid zoneId, OfficeSeat seat);
+    Task<OfficeSeat> AddSeat(Guid zoneId, OfficeSeat seat);
+    Task RemoveSeat(Guid zoneId, Guid seat);
     Task<List<OfficeSeat>> GetSeats(Guid zoneId);
 }
