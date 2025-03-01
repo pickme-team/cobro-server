@@ -19,4 +19,8 @@ public class Zone
     public float Width { get; set; }
 
     public float Height { get; set; }
+
+    public bool IsPublic { get; set; }
+    
+    public List<OfficeSeat> Seats { get; set; } = [];
 }
