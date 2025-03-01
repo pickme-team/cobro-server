@@ -44,7 +44,7 @@ public class AuthTests(TestContainers fixture) : IAssemblyFixture<TestContainers
         var responseGet = await fixture.Client.GetAsync("user");
         
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var user = await response.Content.ReadFromJsonAsync<User>();
+        var user = await responseGet.Content.ReadFromJsonAsync<User>();
         
         Assert.NotNull(user);
         
