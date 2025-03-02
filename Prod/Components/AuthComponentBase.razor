@@ -1,0 +1,19 @@
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inherits LayoutComponentBase
+
+@code {
+    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity is not null && !user.Identity.IsAuthenticated && !user.IsInRole("Admin"))
+        {
+            Navigation.NavigateTo("/auth");
+        }
+    }
+}
