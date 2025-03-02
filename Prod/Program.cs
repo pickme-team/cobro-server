@@ -97,6 +97,8 @@ services.AddAuthorization(o => o.AddPolicy("Admin", policy => policy.RequireClai
 services.AddAuthentication().AddJwtBearer();
 services.AddYandexObjectStorage(builder.Configuration);
 
+services.AddHostedService<LateService>();
+
 services.AddSingleton<IQrCodeService, QrCodeService>();
 services.AddHostedService<QrCodeService>();
 services.AddScoped<IAuthService, AuthService>();
