@@ -38,10 +38,6 @@ public class UserController(IUserService userService) : ControllerBase
     public Task<UserResponse> GetUserByEmail([FromQuery] [Email] string email) =>
         userService.UserByEmail(email);
 
-    [HttpPatch("city/{id:guid}")]
-    public Task UpdateCity([FromRoute] Guid id, [FromBody] string city) =>
-        userService.UpdateCity(id, city);
-
     [HttpGet]
     public Task<UserResponse> GetCurrentUser() =>
         userService.UserById(User.Id());

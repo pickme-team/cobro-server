@@ -11,9 +11,7 @@ public class UserResponse
     public string Email { get; init; } = null!;
 
     public Uri? AvatarUrl { get; init; }
-
-    public string? City { get; init; }
-
+    
     public List<BookResponse> Books { get; init; } = [];
 
     public Role Role { get; set; }
@@ -24,7 +22,6 @@ public class UserResponse
         Name = user.Name,
         Email = user.Email,
         AvatarUrl = user.AvatarUrl,
-        City = user.City,
         Books = user.Books.Select(BookResponse.From).ToList(),
         Role = user.Role
     };

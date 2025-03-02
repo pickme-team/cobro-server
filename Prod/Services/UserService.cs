@@ -35,12 +35,11 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         await context.SaveChangesAsync();
     }
 
-    public async Task UpdateCity(Guid id, string city)
-    {
-        var user = await context.Users.SingleAsync(u => u.Id == id);
-        user.City = city;
-        await context.SaveChangesAsync();
-    }
+    // public async Task UpdateCity(Guid id, string city)
+    // {
+    //     var user = await context.Users.SingleAsync(u => u.Id == id);
+    //     await context.SaveChangesAsync();
+    // }
 
     public async Task<List<UserResponse>> AllUsers() =>
         (await UserQuery().ToListAsync()).Select(UserResponse.From).ToList();
