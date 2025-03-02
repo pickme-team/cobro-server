@@ -20,10 +20,10 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
     public async Task CancelBook(Guid bookId)
     {
         var book = await context.Books.FindAsync(bookId);
-        
+
         if (book == null)
             return;
-        
+
         book.Status = Status.Cancelled;
         await context.SaveChangesAsync();
     }
@@ -166,7 +166,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
                     .Collection(z => z.Seats)
                     .Query()
                     .Include(s => s.Books)
-                    .SingleAsync(s => s.Id == seatId);
+                    .SingleAsync(s => s.Id == seatId!);
                 return seat.Books.Select(BookResponse.From).ToList();
             case TalkroomZone talkroomZone:
                 await context.Entry(talkroomZone)
@@ -190,7 +190,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
     public async Task<QrResponse> Qr(Guid bookId, Guid userId)
     {
         Tuple<long?, int?> t = qrCodeService.GetByValue(bookId);
-        if (t.Item1 != null) return new QrResponse { Code = t.Item1!.ToString(), Ttl = t.Item2!.Value};
+        if (t.Item1 != null) return new QrResponse { Code = t.Item1!.ToString(), Ttl = t.Item2!.Value };
         var book = await context.Books.SingleAsync(b => b.Id == bookId);
         if (book.UserId != userId)
             throw new ForbiddenException("You did not book this");
@@ -244,8 +244,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
         book.Status = Status.Active;
         await context.SaveChangesAsync();
     }
-    
-        public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to)
+
+    public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to)
     {
         var zone = await context.Zones.SingleAsync(z => z.Id == zoneId);
         return zone switch
@@ -264,8 +264,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
             .Query()
             .ToListAsync();
 
-        return seats.Any(seat => !seat.Books.Any(b => 
-            (b.Status == Status.Active || b.Status == Status.Pending) && 
+        return seats.Any(seat => !seat.Books.Any(b =>
+            (b.Status == Status.Active || b.Status == Status.Pending) &&
             b.Start < to && from < b.End));
     }
 
