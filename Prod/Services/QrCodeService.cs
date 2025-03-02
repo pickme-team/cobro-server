@@ -33,7 +33,7 @@ public class QrCodeService : IQrCodeService
                 long.TryParse(key, out var longKey))
             {
                 var ttl = _db.KeyTimeToLive(key);
-                return new Tuple<long?, int?>(longKey, ttl?.Seconds);
+                return new Tuple<long?, int?>(longKey, (int)ttl?.TotalSeconds);
             }
         }
 
