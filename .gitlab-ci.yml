@@ -22,7 +22,7 @@ build:
   stage: build
   script:
     - echo "Restoring dependencies..."
-    - dotnet restore $PROJECT_NAME
+    - dotnet restore
     - echo "Building the project..."
     - dotnet build $PROJECT_NAME --configuration $BUILD_CONFIGURATION --no-restore
   artifacts:
