@@ -12,10 +12,10 @@ public class BookResponse
     public DateTime End { get; set; }
 
     public string? Description { get; set; }
-    public Zone Zone { get; set; }
+    public Zone Zone { get; set; } = null!;
 
     public OfficeSeat? OfficeSeat { get; set; }
-    
+
     public Status Status { get; set; }
 
     public static BookResponse From(Book book) => new()
@@ -26,7 +26,13 @@ public class BookResponse
         End = book.End,
         Description = book.Description,
         Status = Status.Pending,
-        Zone = book.Zone,
-        OfficeSeat = book is OfficeBook officeBook ? officeBook.OfficeSeat : null
+        Zone = book switch
+        {
+            OfficeBook officeBook => officeBook.OfficeSeat.OfficeZone,
+            OpenBook openBook => openBook.OpenZone,
+            TalkroomBook talkroomBook => talkroomBook.TalkroomZone,
+            _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
+        },
+        OfficeSeat = book is OfficeBook ob ? ob.OfficeSeat : null
     };
 }

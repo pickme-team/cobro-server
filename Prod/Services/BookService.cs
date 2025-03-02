@@ -10,7 +10,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
 {
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {
-        var zone = await context.Zones.SingleAsync(z => z.Id == zoneId);
+        var zone = await context.Zones
+            .SingleAsync(z => z.Id == zoneId);
 
         switch (zone)
         {
@@ -50,8 +51,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
-            OfficeSeat = seat,
-            Zone = req.Zone,
+            OfficeSeat = seat
         });
         await context.SaveChangesAsync();
     }
@@ -123,11 +123,19 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
 
     public async Task<BookResponse> Delete(Guid id)
     {
-        var book = await context.Books.SingleAsync(b => b.Id == id);
+        var book = await GetById(id);
         context.Books.Remove(book);
         await context.SaveChangesAsync();
         return BookResponse.From(book);
     }
+
+    private Task<Book> GetById(Guid id) =>
+        context.Books
+            .Include(b => ((OpenBook)b).OpenZone)
+            .Include(b => ((TalkroomBook)b).TalkroomZone)
+            .Include(b => ((OfficeBook)b).OfficeSeat)
+            .ThenInclude(s => s.OfficeZone)
+            .SingleAsync(b => b.Id == id);
 
     public async Task<List<BookResponse>> GetBooks(Guid id, Guid? seatId)
     {
@@ -139,18 +147,21 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
                     .Collection(z => z.Seats)
                     .Query()
                     .Include(s => s.Books)
+                    .ThenInclude(b => b.OfficeSeat)
                     .SingleAsync(s => s.Id == seatId);
                 return seat.Books.Select(BookResponse.From).ToList();
             case TalkroomZone talkroomZone:
                 await context.Entry(talkroomZone)
                     .Collection(z => z.Books)
                     .Query()
+                    .Include(b => b.TalkroomZone)
                     .LoadAsync();
                 return talkroomZone.Books.Select(BookResponse.From).ToList();
             case OpenZone openZone:
                 await context.Entry(openZone)
                     .Collection(z => z.Books)
                     .Query()
+                    .Include(b => b.OpenZone)
                     .LoadAsync();
                 return openZone.Books.Select(BookResponse.From).ToList();
             default:
@@ -178,16 +189,25 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
 
     public async Task<List<Book>> ActiveBooks(Guid id) =>
         await context.Books
+            .Include(b => ((OpenBook)b).OpenZone)
+            .Include(b => ((TalkroomBook)b).TalkroomZone)
+            .Include(b => ((OfficeBook)b).OfficeSeat)
             .Where(b => b.UserId == id && b.Status == Status.Active)
             .ToListAsync();
 
     public async Task<List<Book>> UserHistory(Guid id) =>
         await context.Books
+            .Include(b => ((OpenBook)b).OpenZone)
+            .Include(b => ((TalkroomBook)b).TalkroomZone)
+            .Include(b => ((OfficeBook)b).OfficeSeat)
             .Where(b => b.UserId == id && b.Status != Status.Active)
             .ToListAsync();
 
     public async Task<Book?> LastBook(Guid id) =>
         await context.Books
+            .Include(b => ((OpenBook)b).OpenZone)
+            .Include(b => ((TalkroomBook)b).TalkroomZone)
+            .Include(b => ((OfficeBook)b).OfficeSeat)
             .Where(b => b.UserId == id && b.Status == Status.Ended)
             .OrderByDescending(b => b.End)
             .LastOrDefaultAsync();
