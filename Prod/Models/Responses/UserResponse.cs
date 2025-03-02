@@ -26,6 +26,6 @@ public class UserResponse
         AvatarUrl = user.AvatarUrl,
         City = user.City,
         Books = user.Books.Select(BookResponse.From).ToList(),
-        Role = Role.ADMIN
+        Role = user.Role
     };
 }
