@@ -84,7 +84,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             .Collection(s => s.Books)
             .Query()
             .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .AnyAsync(b => b.Start < req.To && req.From < b.End);
+            .AnyAsync(b => b.Start < req.To.ToUniversalTime() && req.From.ToUniversalTime() < b.End);
 
         if (overlaps) throw new ForbiddenException("Time not available");
 
@@ -106,7 +106,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             .Collection(z => z.Books)
             .Query()
             .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .AnyAsync(b => b.Start < req.To && req.From < b.End);
+            .AnyAsync(b => b.Start < req.To.ToUniversalTime() && req.From.ToUniversalTime() < b.End);
 
         if (overlaps) throw new ForbiddenException("Time not available");
 
