@@ -7,6 +7,8 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prod.Exceptions;
 using Prod.Services;
+using Serilog;
+using Serilog.Sinks.Grafana.Loki;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -69,13 +71,26 @@ services.AddHttpLogging(o =>
                       | HttpLoggingFields.ResponseStatusCode
                       | HttpLoggingFields.Duration);
 
-// var logger = new LoggerConfiguration()
-//     .ReadFrom.Configuration(builder.Configuration)
-//     .CreateLogger();
-// builder.Services.AddSingleton(logger);
-// builder.Logging.AddSerilog(logger).AddOpenTelemetry();
-//
-// builder.Host.UseSerilog();
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.GrafanaLoki("http://localhost:3100", new List<LokiLabel>
+    {
+        new LokiLabel { Key = "app", Value = "webapi" }
+    }, propertiesAsLabels: new[] { "app" })
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+builder.Services.AddSingleton(logger);
+builder.Logging.AddSerilog(logger).AddOpenTelemetry();
+
+builder.Host.UseSerilog();
+
+builder.Services.AddRazorPages();
 
 services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
@@ -92,13 +107,14 @@ services.AddScoped<IZoneService, ZoneService>();
 var app = builder.Build();
 
 app.UseHttpsRedirection();
+app.MapRazorPages();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapPrometheusScrapingEndpoint();
 app.UseHttpLogging();
-// app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging();
 
 app.MapControllers();
 
