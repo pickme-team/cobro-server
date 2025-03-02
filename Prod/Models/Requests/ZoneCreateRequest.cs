@@ -12,6 +12,8 @@ public class ZoneCreateRequest
     [Required] public int Capacity { get; set; }
 
     public string? Class { get; set; }
+    
+    [Required] public bool IsPublic { get; set; }
 
     [Required] public float XCoordinate { get; set; }
 

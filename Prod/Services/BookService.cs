@@ -6,7 +6,7 @@ using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-public class BookService(ProdContext context, IQrCodeService qrCodeService) : IBookService
+public class BookService(ProdContext context, IQrCodeService qrCodeService, IUserService userService) : IBookService
 {
     public async Task<List<Book>> GetAllActiveBooks() =>
         await context.Books
@@ -31,6 +31,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
     {
         var zone = await context.Zones
             .SingleAsync(z => z.Id == zoneId);
+        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) throw new ForbiddenException("Not a public zone");
         switch (zone)
         {
             case OfficeZone officeZone:
@@ -139,9 +140,9 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
         await context.SaveChangesAsync();
     }
 
-    public async Task<BookResponse> Delete(Guid id)
+    public async Task<BookResponse> Delete(Guid guid)
     {
-        var book = await GetById(id);
+        var book = await GetById(guid);
         context.Books.Remove(book);
         await context.SaveChangesAsync();
         return BookResponse.From(book);
@@ -245,32 +246,33 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
         await context.SaveChangesAsync();
     }
     
-        public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to)
+        public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid)
     {
         var zone = await context.Zones.SingleAsync(z => z.Id == zoneId);
         return zone switch
         {
-            OfficeZone officeZone => await ValidateOfficeZone(officeZone, from, to),
-            TalkroomZone talkroomZone => await ValidateTalkroomZone(talkroomZone, from, to),
-            OpenZone openZone => await ValidateOpenZone(openZone, from, to),
+            OfficeZone officeZone => await ValidateOfficeZone(officeZone, from, to, guid),
+            TalkroomZone talkroomZone => await ValidateTalkroomZone(talkroomZone, from, to, guid),
+            OpenZone openZone => await ValidateOpenZone(openZone, from, to, guid),
             _ => throw new ForbiddenException("Not a bookable zone")
         };
     }
 
-    private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to)
+    private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to, Guid userId)
     {
         var seats = await context.Entry(zone)
             .Collection(x => x.Seats)
             .Query()
             .ToListAsync();
-
+        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
         return seats.Any(seat => !seat.Books.Any(b => 
             (b.Status == Status.Active || b.Status == Status.Pending) && 
             b.Start < to && from < b.End));
     }
 
-    private async Task<bool> ValidateTalkroomZone(TalkroomZone zone, DateTime from, DateTime to)
+    private async Task<bool> ValidateTalkroomZone(TalkroomZone zone, DateTime from, DateTime to, Guid userId)
     {
+        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
         return !await context.Entry(zone)
             .Collection(z => z.Books)
             .Query()
@@ -278,8 +280,9 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
             .AnyAsync(b => b.Start < to && from < b.End);
     }
 
-    private async Task<bool> ValidateOpenZone(OpenZone zone, DateTime from, DateTime to)
+    private async Task<bool> ValidateOpenZone(OpenZone zone, DateTime from, DateTime to, Guid userId)
     {
+        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
         var books = await context.Entry(zone)
             .Collection(z => z.Books)
             .Query()

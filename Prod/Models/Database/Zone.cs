@@ -23,4 +23,6 @@ public class Zone
     public string Type { get; set; } = null!;
     
     public List<ZoneTag> ZoneTags { get; set; } = [];
+    
+    public bool IsPublic { get; set; }
 }

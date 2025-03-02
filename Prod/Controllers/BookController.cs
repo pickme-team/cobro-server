@@ -55,7 +55,7 @@ public class BookController(IBookService bookService) : ControllerBase
     {
         try
         {
-            var isAvailable = await bookService.Validate(id, from, to);
+            var isAvailable = await bookService.Validate(id, from, to, User.Id());
             return isAvailable 
                 ? Ok() 
                 : StatusCode(StatusCodes.Status409Conflict, "Time not available");
