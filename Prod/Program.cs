@@ -1,4 +1,6 @@
+using System.Configuration;
 using System.Reflection;
+using AspNetCore.Yandex.ObjectStorage.Extensions;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -98,6 +100,7 @@ services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
 services.AddAuthorization(o => o.AddPolicy("Admin", policy => policy.RequireClaim("admin", true.ToString())));
 services.AddAuthentication().AddJwtBearer();
+services.AddYandexObjectStorage(builder.Configuration);
 
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();

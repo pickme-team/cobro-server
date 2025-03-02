@@ -1,9 +1,10 @@
+using AspNetCore.Yandex.ObjectStorage.Object.Responses;
 using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class UserService(ProdContext context, IConfiguration configuration) : IUserService
+public class UserService(ProdContext context, YandexObjectStorage _objectStoreService) : IUserService
 {
     public async Task<User?> UserById(Guid id) => await context.Users.FindAsync(id);
 
@@ -29,4 +30,10 @@ public class UserService(ProdContext context, IConfiguration configuration) : IU
     }
 
     public Task<List<User>> AllUsers() => context.Users.ToListAsync();
+
+    public Task<string> uploadMedia(IFormFile file)
+    {
+        S3ObjectPutResponse response = await _objectStoreService.ObjectService.PutAsync(byteArr, fileName);
+        S3ObjectDeleteResponse response = await _objectStoreService.ObjectService.DeleteAsync(filename);
+    } 
 }
