@@ -14,6 +14,7 @@
             if (string.IsNullOrEmpty(id))
             {
                 Navigation.NavigateTo("/auth");
+                StateHasChanged();
             }
         }
     }
