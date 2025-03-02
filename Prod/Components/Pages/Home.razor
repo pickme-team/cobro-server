@@ -1,6 +1,6 @@
-﻿@attribute [Authorize(Policy = "Admin")]
+﻿@using Microsoft.AspNetCore.Authorization
+@inherits AuthComponentBase
 @page "/"
-@using Microsoft.AspNetCore.Authorization
 
 <PageTitle>Home</PageTitle>
 
