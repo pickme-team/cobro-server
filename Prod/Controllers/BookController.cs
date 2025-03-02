@@ -65,6 +65,4 @@ public class BookController(IBookService bookService) : ControllerBase
             return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
         }
     }
-
-
 }

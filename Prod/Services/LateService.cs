@@ -11,7 +11,7 @@ public class LateService(ProdContext context) : BackgroundService
         {
             var now = DateTime.UtcNow;
             var curHour = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0).ToUniversalTime();
-            var nextIter = (int)Math.Ceiling((float)(now.Minute + 1) / 15) * 15 + 10;
+            var nextIter = (int)Math.Ceiling((float)(now.Minute + 1) / 15) * 15 + 11;
             var waitUntil = curHour.AddMinutes(nextIter);
             await Task.Delay(waitUntil - now, stoppingToken);
 
