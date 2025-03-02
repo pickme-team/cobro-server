@@ -78,7 +78,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
     
     [HttpPost("upload")]
-    public async Task<ActionResult<string>> UploadMedia([FromForm] IFormFile file)
+    public async Task<ActionResult<string>> UploadMedia(IFormFile file)
     {
         try
         {
