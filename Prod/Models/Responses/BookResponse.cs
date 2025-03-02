@@ -13,8 +13,10 @@ public class BookResponse
 
     public string? Description { get; set; }
 
+    public Guid ZoneId { get; set; }
     public string ZoneName { get; set; } = null!;
 
+    public Guid? OfficeSeatId { get; set; }
     public string? OfficeSeatNumber { get; set; }
 
     public Status Status { get; set; }
@@ -27,6 +29,13 @@ public class BookResponse
         End = book.End,
         Description = book.Description,
         Status = Status.Pending,
+        ZoneId = book switch
+        {
+            OfficeBook officeBook => officeBook.OfficeSeat.OfficeZoneId,
+            OpenBook openBook => openBook.OpenZoneId,
+            TalkroomBook talkroomBook => talkroomBook.TalkroomZoneId,
+            _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
+        },
         ZoneName = book switch
         {
             OfficeBook officeBook => officeBook.OfficeSeat.OfficeZone.Name,
@@ -34,6 +43,7 @@ public class BookResponse
             TalkroomBook talkroomBook => talkroomBook.TalkroomZone.Name,
             _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
         },
-        OfficeSeatNumber = book is OfficeBook ob ? ob.OfficeSeat.InnerNumber : null
+        OfficeSeatId = book is OfficeBook ob ? ob.OfficeSeatId : null,
+        OfficeSeatNumber = book is OfficeBook ob1 ? ob1.OfficeSeat.InnerNumber : null
     };
 }
