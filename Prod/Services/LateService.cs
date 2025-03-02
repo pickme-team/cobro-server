@@ -7,19 +7,15 @@ public class LateService(ProdContext context) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var now = DateTime.UtcNow;
-        var nextIter = (int)Math.Ceiling((float)(now.Minute + 1) / 15) * 15 + 10 - 1;
-        var waitUntil = nextIter < 60
-            ? new DateTime(now.Year, now.Month, now.Day, now.Hour, nextIter, 0).ToUniversalTime()
-            : new DateTime(now.Year, now.Month, now.Day, now.Hour + 1, nextIter - 59, 0).ToUniversalTime();
-
-
-        await Task.Delay(waitUntil - now, stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
         {
-            await CancelBooks();
+            var now = DateTime.UtcNow;
+            var curHour = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0).ToUniversalTime();
+            var nextIter = (int)Math.Ceiling((float)(now.Minute + 1) / 15) * 15 + 10;
+            var waitUntil = curHour.AddMinutes(nextIter);
+            await Task.Delay(waitUntil - now, stoppingToken);
 
-            await Task.Delay(1000 * 15 * 60, stoppingToken);
+            await CancelBooks();
         }
     }
 
