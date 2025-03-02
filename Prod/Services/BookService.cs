@@ -8,6 +8,25 @@ namespace Prod.Services;
 
 public class BookService(ProdContext context, IQrCodeService qrCodeService) : IBookService
 {
+    public async Task<List<Book>> GetAllActiveBooks() =>
+        await context.Books
+            .Include(b => ((OpenBook)b).OpenZone)
+            .Include(b => ((TalkroomBook)b).TalkroomZone)
+            .Include(b => ((OfficeBook)b).OfficeSeat)
+            .Where(b => b.Status == Status.Active)
+            .ToListAsync();
+
+    public async Task CancelBook(Guid bookId)
+    {
+        var book = await context.Books.FindAsync(bookId);
+        
+        if (book == null)
+            return;
+        
+        book.Status = Status.Cancelled;
+        await context.SaveChangesAsync();
+    }
+
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {
         var zone = await context.Zones
