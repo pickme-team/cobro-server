@@ -20,6 +20,7 @@ public class OfficeZoneSeatsService(ProdContext context) : IOfficeZoneSeatsServi
             OfficeZoneId = zoneId,
             X = req.X,
             Y = req.Y,
+            InnerNumber = req.InnerNumber,
         };
         context.OfficeSeats.Add(seat);
         await context.SaveChangesAsync();
@@ -38,7 +39,8 @@ public class OfficeZoneSeatsService(ProdContext context) : IOfficeZoneSeatsServi
         {
             OfficeZoneId = zoneId,
             X = r.X,
-            Y = r.Y
+            Y = r.Y,
+            InnerNumber = r.InnerNumber,
         }).ToList();
 
         context.OfficeSeats.AddRange(seats);

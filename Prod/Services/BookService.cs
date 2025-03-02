@@ -50,7 +50,8 @@ public class BookService(ProdContext context) : IBookService
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
-            OfficeSeat = seat
+            OfficeSeat = seat,
+            ZoneName = req.ZoneName,
         });
         await context.SaveChangesAsync();
     }
@@ -156,4 +157,20 @@ public class BookService(ProdContext context) : IBookService
                 return [];
         }
     }
+    
+    public async Task<List<Book>> ActiveBooks(Guid id) =>
+        await context.Books
+            .Where(b => b.UserId == id && b.Status == Status.Active)
+            .ToListAsync();
+
+    public async Task<List<Book>> UserHistory(Guid id) =>
+        await context.Books
+            .Where(b => b.UserId == id && b.Status != Status.Active)
+            .ToListAsync();
+
+    public async Task<Book?> LastBook(Guid id) =>
+        await context.Books
+            .Where(b => b.UserId == id && b.Status == Status.Ended)
+            .OrderByDescending(b => b.End)
+            .LastOrDefaultAsync();
 }
