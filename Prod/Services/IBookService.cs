@@ -6,6 +6,8 @@ namespace Prod.Services;
 
 public interface IBookService
 {
+    Task<List<Book>> GetAllActiveBooks();
+    Task CancelBook(Guid bookId);
     Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest);
     Task<BookResponse> Delete(Guid guid);
     Task<List<BookResponse>> GetBooks(Guid id, Guid? seatId);
@@ -14,4 +16,5 @@ public interface IBookService
     Task<List<Book>> UserHistory(Guid id);
     Task<Book?> LastBook(Guid id);
     Task ConfirmQr(ConfirmQrRequest req);
+    Task<bool> Validate(Guid zoneId, DateTime from, DateTime to);
 }

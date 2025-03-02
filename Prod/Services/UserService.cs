@@ -42,22 +42,22 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         await context.SaveChangesAsync();
     }
 
-    public async Task Delete(User user)
-    {
-        context.Users.Remove(user);
-        await context.SaveChangesAsync();
-    }
-
     public async Task<List<UserResponse>> AllUsers() =>
         (await UserQuery().ToListAsync()).Select(UserResponse.From).ToList();
 
-    public async Task<string> UploadMedia(IFormFile file)
+    public async Task<string> UploadMedia(IFormFile file, Guid id)
     {
-        if (file.FileName == null || file.Length == 0 || file.FileName.Split(".")[^1] == null)
+        if (file.Length == 0 || file.FileName.Split(".")[^1].Length == 0)
             throw new ArgumentException("Invalid file");
         string fileName = Guid.NewGuid() + "." + file.FileName.Split('.')[^1];
 
         await objectStoreService.ObjectService.PutAsync(file.OpenReadStream(), fileName);
-        return "https://storage.yandexcloud.net/cobro/" + fileName;
+        var url = "https://storage.yandexcloud.net/cobro/" + fileName;
+
+        var user = await context.Users.SingleAsync(u => u.Id == id);
+        user.AvatarUrl = new Uri(url);
+        await context.SaveChangesAsync();
+
+        return url;
     }
 }

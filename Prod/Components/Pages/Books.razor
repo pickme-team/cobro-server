@@ -1,0 +1,132 @@
+@page "/books"
+@using Prod.Models.Database
+@using Prod.Services
+@inject IBookService BookService
+@rendermode InteractiveServer
+
+<h3>Бронирования</h3>
+
+@code {
+    private List<Book> _books = new();
+    private User? _selectedUser;
+    private bool _showModal;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetBooks();
+    }
+
+    private async Task GetBooks()
+    {
+        try
+        {
+            _books = await BookService.GetAllActiveBooks();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка: {ex.Message}";
+        }
+    }
+
+    private void ShowUserInfo(Guid bookId)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == bookId)!;
+        _selectedUser = book.User;
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        _showModal = false;
+    }
+
+    private async Task CancelBook(Guid bookId)
+    {
+        try
+        {
+            await BookService.CancelBook(bookId); // Добавьте логику отмены бронирования в ваш сервис
+            var book = _books.FirstOrDefault(b => b.Id == bookId);
+            if (book != null)
+            {
+                _books.Remove(book);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка: {ex.Message}";
+        }
+    }
+}
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+
+@foreach (var group in _books.GroupBy(b => b.GetType().Name))
+{
+    <h4>@group.Key</h4>
+    <ul>
+        @foreach (var book in group)
+        {
+            <li>
+                <p>Бронирование: @book.Description</p>
+                <p>Дата начала: @book.Start</p>
+                <p>Дата окончания: @book.End</p>
+                <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
+                <button @onclick="() => CancelBook(book.Id)">Отменить</button>
+            </li>
+        }
+    </ul>
+}
+
+@if (_showModal && _selectedUser != null)
+{
+    <div class="modal" style="display: block;">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModal">&times;</span>
+            <h4>Информация о клиенте</h4>
+            <p>Имя: @_selectedUser.Name</p>
+            <p>Email: @_selectedUser.Email</p>
+            <p>Город: @_selectedUser.City</p>
+            <p>Роль: @_selectedUser.Role</p>
+        </div>
+    </div>
+}
+
+<style>
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
