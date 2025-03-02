@@ -25,8 +25,5 @@ public class Book
 
     public string? Description { get; set; }
 
-    public Zone Zone { get; set; }
-    
-
     public Status Status { get; set; }
 }
