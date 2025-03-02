@@ -109,7 +109,6 @@ services.AddYandexObjectStorage(builder.Configuration);
 services.AddHostedService<LateService>();
 
 services.AddScoped<IQrCodeService, QrCodeService>();
-services.AddHostedService<QrCodeService>();
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();
 services.AddScoped<IBookService, BookService>();
