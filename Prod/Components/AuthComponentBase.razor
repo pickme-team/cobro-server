@@ -8,14 +8,11 @@
 @code {
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        var id = await LocalStorage.GetItemAsStringAsync("adminId");
+        if (string.IsNullOrEmpty(id))
         {
-            var id = await LocalStorage.GetItemAsStringAsync("adminId");
-            if (string.IsNullOrEmpty(id))
-            {
-                Navigation.NavigateTo("/auth");
-                StateHasChanged();
-            }
+            Navigation.NavigateTo("/auth");
+            StateHasChanged();
         }
     }
 }
