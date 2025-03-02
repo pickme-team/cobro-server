@@ -22,4 +22,22 @@ public class BookController(IBookService bookService) : ControllerBase
 
     [HttpDelete("{id:guid}")]
     public Task<BookResponse> Delete(Guid id) => bookService.Delete(id);
+
+    [HttpPost("last")]
+    public async Task<BookResponse?> Last() =>
+        await bookService.LastBook(User.Id()) is { } book ? BookResponse.From(book) : null;
+
+    [HttpPost("history")]
+    public async Task<List<BookResponse>> History()
+    {
+        var books = await bookService.UserHistory(User.Id());
+        return books.Select(BookResponse.From).ToList();
+    }
+    
+    [HttpPost("active")]
+    public async Task<List<BookResponse>> ActiveBooks()
+    {
+        var books = await bookService.ActiveBooks(User.Id());
+        return books.Select(BookResponse.From).ToList();
+    }
 }
