@@ -30,17 +30,24 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     public async Task EditDateBook(Guid bookId, DateTime start, DateTime end)
     {
-        var book = await context.Books.FindAsync(bookId);
+        await CancelBook(bookId);
 
-        if (book == null)
-            return;
+        var book = await context.Books.SingleAsync(b => b.Id == bookId);
+        var zoneId = book switch
+        {
+            OfficeBook officeBook => officeBook.OfficeSeat.OfficeZoneId,
+            OpenBook openBook => openBook.OpenZoneId,
+            TalkroomBook talkroomBook => talkroomBook.TalkroomZoneId,
+            _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
+        };
 
-        if (start >= end)
-            throw new ForbiddenException("Дата начала должна быть меньше даты конца");
-        
-        book.Start = start;
-        book.End = end;
-        await context.SaveChangesAsync();
+        var data = new BookRequest()
+        {
+            From = start,
+            To = end,
+            Description = book.Description
+        };
+        await Book(zoneId, (book as OfficeBook)?.OfficeSeat.Id, book.UserId, data);
     }
 
     public async Task<Book?> GetBookById(Guid bookId) =>
