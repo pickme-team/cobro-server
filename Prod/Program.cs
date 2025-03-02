@@ -1,3 +1,5 @@
+using System.Configuration;
+using System.Net;
 using System.Reflection;
 using AspNetCore.Yandex.ObjectStorage.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -114,12 +116,10 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
 app.MapPrometheusScrapingEndpoint();
 app.UseSerilogRequestLogging();
 
