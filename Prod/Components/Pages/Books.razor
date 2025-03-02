@@ -41,6 +41,24 @@
     {
         _showModal = false;
     }
+
+    private async Task CancelBook(Guid bookId)
+    {
+        try
+        {
+            await BookService.CancelBook(bookId); // Добавьте логику отмены бронирования в ваш сервис
+            var book = _books.FirstOrDefault(b => b.Id == bookId);
+            if (book != null)
+            {
+                _books.Remove(book);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка: {ex.Message}";
+        }
+    }
 }
 
 @if (!string.IsNullOrEmpty(_errorMessage))
@@ -59,6 +77,7 @@
                 <p>Дата начала: @book.Start</p>
                 <p>Дата окончания: @book.End</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
+                <button @onclick="() => CancelBook(book.Id)">Отменить</button>
             </li>
         }
     </ul>
