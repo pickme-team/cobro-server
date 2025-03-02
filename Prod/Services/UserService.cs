@@ -19,6 +19,10 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
     public async Task<UserResponse> UserById(Guid id) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Id == id));
 
+    public async Task<User> Get(Guid id) =>
+        await UserQuery().SingleAsync(u => u.Id == id);
+
+    
     public async Task<UserResponse> UserByEmail(string email) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Email == email));
 
@@ -58,5 +62,30 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         await context.SaveChangesAsync();
 
         return url;
+    }
+
+    public async Task SetPassport(Guid userId, Passport passport)
+    {
+        var user = await context.Users
+            .Include(u => u.Passport)
+            .SingleAsync(u => u.Id == userId);
+        if (user.Passport != null)
+            throw new ArgumentException("Passport already exists");
+        user.Passport = passport;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task SetVerificationPhoto(IFormFile file, Guid id)
+    {
+        if (file.Length == 0 || file.FileName.Split(".")[^1].Length == 0)
+            throw new ArgumentException("Invalid file");
+        string fileName = Guid.NewGuid() + "." + file.FileName.Split('.')[^1];
+
+        await objectStoreService.ObjectService.PutAsync(file.OpenReadStream(), fileName);
+        var url = "https://storage.yandexcloud.net/cobro/" + fileName;
+
+        var user = await context.Users.SingleAsync(u => u.Id == id);
+        user.VerificationPhoto = new Uri(url);
+        await context.SaveChangesAsync();
     }
 }

@@ -54,4 +54,32 @@ public class UserController(IUserService userService) : ControllerBase
             return BadRequest(new { Message = e.Message });
         }
     }
+
+    [HttpPost("passport")]
+    public async Task<ActionResult> SetPassport([FromForm] Passport passport)
+    {
+        await userService.SetPassport(User.Id(), passport);
+        return Ok();
+    }
+
+    [HttpPost("verification-photo")]
+    public async Task<ActionResult> SetVerificationPhoto(IFormFile file)
+    {
+        try
+        {
+            await userService.SetVerificationPhoto(file, User.Id());
+            return Ok();
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(new { Message = e.Message });
+        }
+    }
+
+    [HttpGet("passport")]
+    public async Task<ActionResult<Passport>> GetPassport()
+    {
+        User user = await userService.Get(User.Id());
+        return Ok(user.Passport);
+    }
 }

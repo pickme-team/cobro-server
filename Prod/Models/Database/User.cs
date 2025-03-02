@@ -19,8 +19,13 @@ public class User
     public string Password { get; set; } = null!;
 
     public Uri? AvatarUrl { get; set; }
-    
+
     public List<Book> Books { get; } = [];
 
     public Role Role { get; set; }
+
+    public Guid? PassportId { get; set; }
+    public Passport? Passport { get; set; }
+
+    public Uri? VerificationPhoto { get; set; }
 }
