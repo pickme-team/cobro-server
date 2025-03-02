@@ -23,7 +23,7 @@ window.startScanning = () => {
                 const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
                 if (code) {
-                    DotNet.invokeMethodAsync('YourAssemblyName', 'ProcessQrCode', code.data);
+                    DotNet.invokeMethodAsync('Prod', 'ProcessQrCode', code.data);
                 }
             }
             requestAnimationFrame(tick);
