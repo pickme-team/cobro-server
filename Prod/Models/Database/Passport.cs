@@ -13,7 +13,4 @@ public class Passport
     public string CodeOfIssuer { get; set; }
     public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
     public DateTime PassportBirthday { get; set; }
-
-    public Guid UserId { get; set; }
-    public User User { get; set; }
 }
