@@ -7,8 +7,18 @@
 
 <h3>Бронирования</h3>
 
+<div class="filters">
+    <input type="text" placeholder="Поиск по имени пользователя" @bind="userNameFilter" />
+    <label>Дата начала:</label>
+    <input type="date" @bind="startDateFilter" />
+    <label>Дата окончания:</label>
+    <input type="date" @bind="endDateFilter" />
+    <button @onclick="ApplyFilters">Применить фильтры</button>
+</div>
+
 @code {
     private List<Book> _books = new();
+    private List<Book> _filteredBooks = new();
     private User? _selectedUser;
     private bool _showModal;
     private string? _errorMessage;
@@ -16,10 +26,14 @@
     private Guid _editingBookId;
     private DateTime _editStart;
     private DateTime _editEnd;
+    private string userNameFilter = string.Empty;
+    private DateTime? startDateFilter;
+    private DateTime? endDateFilter;
 
     protected override async Task OnInitializedAsync()
     {
         await GetBooks();
+        ApplyFilters();
     }
 
     private async Task GetBooks()
@@ -56,6 +70,7 @@
             if (book != null)
             {
                 _books.Remove(book);
+                ApplyFilters();
                 StateHasChanged();
             }
         }
@@ -83,6 +98,7 @@
             {
                 book.Start = _editStart;
                 book.End = _editEnd;
+                ApplyFilters();
                 StateHasChanged();
             }
             CloseModal();
@@ -92,6 +108,14 @@
             _errorMessage = $"Ошибка: {ex.Message}";
         }
     }
+
+    private void ApplyFilters()
+    {
+        _filteredBooks = _books.Where(b =>
+            (string.IsNullOrEmpty(userNameFilter) || b.User.Name.Contains(userNameFilter, StringComparison.OrdinalIgnoreCase)) &&
+            (!startDateFilter.HasValue || b.Start >= startDateFilter.Value) &&
+            (!endDateFilter.HasValue || b.End <= endDateFilter.Value)).ToList();
+    }
 }
 
 @if (!string.IsNullOrEmpty(_errorMessage))
@@ -99,7 +123,7 @@
     <div class="alert alert-danger">@_errorMessage</div>
 }
 
-@foreach (var group in _books.GroupBy(b => b.GetType().Name))
+@foreach (var group in _filteredBooks.GroupBy(b => b.GetType().Name))
 {
     <h4>@group.Key</h4>
     <ul>
@@ -111,7 +135,10 @@
                 <p>Дата окончания: @book.End</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
                 <button @onclick="() => CancelBook(book.Id)">Отменить</button>
-                <button @onclick="() => EditDates(book.Id, book.Start, book.End)">Редактировать</button>
+                @if (book.Status == Status.Pending)
+                {
+                    <button @onclick="() => EditDates(book.Id, book.Start, book.End)">Редактировать</button>
+                }
             </li>
         }
     </ul>
@@ -208,5 +235,9 @@
     .client-avatar img {
         max-width: 100px;
         border-radius: 50%;
+    }
+
+    .filters {
+        margin-bottom: 20px;
     }
 </style>
