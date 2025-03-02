@@ -8,6 +8,7 @@ public interface IBookService
 {
     Task<List<Book>> GetAllActiveBooks();
     Task CancelBook(Guid bookId);
+    Task EditDateBook(Guid bookId, DateTime start, DateTime end);
     Task<Book?> GetBookById(Guid bookId);
     Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest);
     Task<BookResponse> Delete(Guid guid);
@@ -18,4 +19,5 @@ public interface IBookService
     Task<Book?> LastBook(Guid id);
     Task ConfirmQr(ConfirmQrRequest req);
     Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid);
+    Task<List<BookWithUserResponse>> GetAll();
 }

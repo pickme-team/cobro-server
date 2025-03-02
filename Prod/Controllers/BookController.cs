@@ -43,21 +43,25 @@ public class BookController(IBookService bookService) : ControllerBase
         return books.Select(BookResponse.From).ToList();
     }
 
+    [HttpGet]
+    [Authorize(Policy = "Admin")]
+    public Task<List<BookWithUserResponse>> GetAll() => bookService.GetAll();
+
     [HttpGet("active")]
     public async Task<List<BookResponse>> ActiveBooks()
     {
         var books = await bookService.ActiveBooks(User.Id());
         return books.Select(BookResponse.From).ToList();
     }
-    
+
     [HttpGet("{id:guid}/validate")]
     public async Task<ActionResult> Validate(Guid id, [FromQuery] DateTime from, [FromQuery] DateTime to)
     {
         try
         {
             var isAvailable = await bookService.Validate(id, from, to, User.Id());
-            return isAvailable 
-                ? Ok() 
+            return isAvailable
+                ? Ok()
                 : StatusCode(StatusCodes.Status409Conflict, "Time not available");
         }
         catch (ForbiddenException ex)

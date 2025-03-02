@@ -28,6 +28,21 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         await context.SaveChangesAsync();
     }
 
+    public async Task EditDateBook(Guid bookId, DateTime start, DateTime end)
+    {
+        var book = await context.Books.FindAsync(bookId);
+
+        if (book == null)
+            return;
+
+        if (start >= end)
+            throw new ForbiddenException("Дата начала должна быть меньше даты конца");
+        
+        book.Start = start;
+        book.End = end;
+        await context.SaveChangesAsync();
+    }
+
     public async Task<Book?> GetBookById(Guid bookId) =>
         await context.Books.FindAsync(bookId);
 
@@ -261,6 +276,23 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         };
     }
 
+    public async Task<List<BookWithUserResponse>> GetAll()
+    {
+        var entities = await context.Books
+            .Include(b => ((OpenBook)b).OpenZone)
+            .Include(b => ((TalkroomBook)b).TalkroomZone)
+            .Include(b => ((OfficeBook)b).OfficeSeat)
+            .Include(b => b.User)
+            .ToListAsync();
+
+        foreach (var entity in entities)
+        {
+            entity.User.Books.Clear();
+        }
+
+        return entities.Select(BookWithUserResponse.From).ToList();
+    }
+
     private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to, Guid userId)
     {
         var seats = await context.Entry(zone)
@@ -268,7 +300,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             .Query()
             .ToListAsync();
         if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
-        
+
         return seats.Any(seat => !seat.Books.Any(b =>
             (b.Status == Status.Active || b.Status == Status.Pending) &&
             b.Start < to && from < b.End));

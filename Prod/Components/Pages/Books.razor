@@ -2,6 +2,7 @@
 @using Prod.Models.Database
 @using Prod.Services
 @inject IBookService BookService
+@inject IJSRuntime JSRuntime
 @rendermode InteractiveServer
 
 <h3>Бронирования</h3>
@@ -11,19 +12,15 @@
     private User? _selectedUser;
     private bool _showModal;
     private string? _errorMessage;
+    private bool _showEditModal;
+    private Guid _editingBookId;
+    private DateTime _editStart;
+    private DateTime _editEnd;
 
     protected override async Task OnInitializedAsync()
     {
         await GetBooks();
     }
-
-    private string GetGroupName(string typeName) => typeName switch
-    {
-        nameof(OpenBook) => "Открытое просторанство",
-        nameof(OfficeBook) => "Места в офисе",
-        nameof(TalkroomBook) => "Комнаты",
-        _ => "Остальное"
-    };
 
     private async Task GetBooks()
     {
@@ -42,13 +39,12 @@
         var book = _books.FirstOrDefault(b => b.Id == bookId)!;
         _selectedUser = book.User;
         _showModal = true;
-        StateHasChanged();
     }
 
     private void CloseModal()
     {
         _showModal = false;
-        StateHasChanged();
+        _showEditModal = false;
     }
 
     private async Task CancelBook(Guid bookId)
@@ -68,6 +64,34 @@
             _errorMessage = $"Ошибка: {ex.Message}";
         }
     }
+
+    private void EditDates(Guid bookId, DateTime start, DateTime end)
+    {
+        _editingBookId = bookId;
+        _editStart = start;
+        _editEnd = end;
+        _showEditModal = true;
+    }
+
+    private async Task SaveDates()
+    {
+        try
+        {
+            await BookService.EditDateBook(_editingBookId, _editStart, _editEnd);
+            var book = _books.FirstOrDefault(b => b.Id == _editingBookId);
+            if (book != null)
+            {
+                book.Start = _editStart;
+                book.End = _editEnd;
+                StateHasChanged();
+            }
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка: {ex.Message}";
+        }
+    }
 }
 
 @if (!string.IsNullOrEmpty(_errorMessage))
@@ -77,18 +101,17 @@
 
 @foreach (var group in _books.GroupBy(b => b.GetType().Name))
 {
-    <h4>@GetGroupName(group.Key)</h4>
+    <h4>@group.Key</h4>
     <ul>
         @foreach (var book in group)
         {
             <li>
-                <p>Бронирование #@book.Id: @book.Description</p>
-                <p>Статус: @Enum.GetName(book.Status)</p>
+                <p>Бронирование: @book.Description</p>
                 <p>Дата начала: @book.Start</p>
                 <p>Дата окончания: @book.End</p>
-                <p>Дата создания: @book.CreatedAt</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
                 <button @onclick="() => CancelBook(book.Id)">Отменить</button>
+                <button @onclick="() => EditDates(book.Id, book.Start, book.End)">Редактировать</button>
             </li>
         }
     </ul>
@@ -100,9 +123,38 @@
         <div class="modal-content">
             <span class="close" @onclick="CloseModal">&times;</span>
             <h4>Информация о клиенте</h4>
-            <p>Имя: @_selectedUser.Name</p>
-            <p>Email: @_selectedUser.Email</p>
-            <p>Роль: @_selectedUser.Role</p>
+            <div class="client-info">
+                <div class="client-details">
+                    <p>Имя: @_selectedUser.Name</p>
+                    <p>Email: @_selectedUser.Email</p>
+                    <p>Роль: @_selectedUser.Role</p>
+                </div>
+                @if (_selectedUser.AvatarUrl != null)
+                {
+                    <div class="client-avatar">
+                        <img src="@_selectedUser.AvatarUrl.ToString()" alt="Avatar" />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showEditModal)
+{
+    <div class="modal" style="display: block;">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModal">&times;</span>
+            <h4>Редактировать даты</h4>
+            <div>
+                <label>Дата начала:</label>
+                <input type="date" @bind="(_editStart)" />
+            </div>
+            <div>
+                <label>Дата окончания:</label>
+                <input type="date" @bind="(_editEnd)" />
+            </div>
+            <button @onclick="SaveDates">Сохранить</button>
         </div>
     </div>
 }
@@ -115,7 +167,7 @@
         width: 100%;
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
-        display: none;
+        display: block;
     }
 
     .modal-content {
@@ -138,5 +190,23 @@
         color: black;
         text-decoration: none;
         cursor: pointer;
+    }
+
+    .client-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .client-details {
+        flex: 1;
+    }
+
+    .client-avatar {
+        margin-left: 20px;
+    }
+
+    .client-avatar img {
+        max-width: 100px;
+        border-radius: 50%;
     }
 </style>
