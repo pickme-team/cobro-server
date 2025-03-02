@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Prod.Models.Database;
 
 public enum Role
@@ -10,7 +12,6 @@ public enum Role
 public class User
 {
     public Guid Id { get; set; }
-
     public string Name { get; set; } = null!;
 
     public string Email { get; set; } = null!;
@@ -22,6 +23,4 @@ public class User
     public List<Book> Books { get; } = [];
 
     public Role Role { get; set; }
-    
-    public string Avatar { get; set; } = null!;
 }
