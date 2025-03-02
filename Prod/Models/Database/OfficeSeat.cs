@@ -13,4 +13,6 @@ public class OfficeSeat
 
     [Required] public float X { set; get; }
     [Required] public float Y { set; get; }
+
+    public string? InnerNumber { get; set; }
 }

@@ -12,6 +12,7 @@ public class BookResponse
     public DateTime End { get; set; }
 
     public string? Description { get; set; }
+    public string? ZoneName { get; set; }
 
     public Status Status { get; set; }
 
@@ -22,6 +23,7 @@ public class BookResponse
         Start = book.Start,
         End = book.End,
         Description = book.Description,
-        Status = Status.Pending
+        Status = Status.Pending,
+        ZoneName = book.ZoneName,
     };
 }
