@@ -17,6 +17,14 @@
         await GetBooks();
     }
 
+    private string GetGroupName(string typeName) => typeName switch
+    {
+        nameof(OpenBook) => "Открытое просторанство",
+        nameof(OfficeBook) => "Места в офисе",
+        nameof(TalkroomBook) => "Комнаты",
+        _ => "Остальное"
+    };
+
     private async Task GetBooks()
     {
         try
@@ -40,13 +48,14 @@
     private void CloseModal()
     {
         _showModal = false;
+        StateHasChanged();
     }
 
     private async Task CancelBook(Guid bookId)
     {
         try
         {
-            await BookService.CancelBook(bookId); // Добавьте логику отмены бронирования в ваш сервис
+            await BookService.CancelBook(bookId);
             var book = _books.FirstOrDefault(b => b.Id == bookId);
             if (book != null)
             {
@@ -68,14 +77,15 @@
 
 @foreach (var group in _books.GroupBy(b => b.GetType().Name))
 {
-    <h4>@group.Key</h4>
+    <h4>@GetGroupName(group.Key)</h4>
     <ul>
         @foreach (var book in group)
         {
             <li>
-                <p>Бронирование: @book.Description</p>
+                <p>Бронирование #@book.Id: @book.Description</p>
                 <p>Дата начала: @book.Start</p>
                 <p>Дата окончания: @book.End</p>
+                <p>Дата создания: @book.CreatedAt</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
                 <button @onclick="() => CancelBook(book.Id)">Отменить</button>
             </li>
