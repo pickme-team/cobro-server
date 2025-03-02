@@ -1,26 +1,34 @@
-window.jsFunctions = {
-    setLicense: async function setLicense(license) {
-        try {
-            Dynamsoft.Core.CoreModule.engineResourcePaths = {
-                std: "https://cdn.jsdelivr.net/npm/dynamsoft-capture-vision-std@1.2.10/dist/",
-                dip: "https://cdn.jsdelivr.net/npm/dynamsoft-image-processing@2.2.30/dist/",
-                core: "https://cdn.jsdelivr.net/npm/dynamsoft-core@3.2.30/dist/",
-                license: "https://cdn.jsdelivr.net/npm/dynamsoft-license@3.2.21/dist/",
-                cvr: "https://cdn.jsdelivr.net/npm/dynamsoft-capture-vision-router@2.2.30/dist/",
-                dce: "https://cdn.jsdelivr.net/npm/dynamsoft-camera-enhancer@4.0.3/dist/",
-                dbr: "https://cdn.jsdelivr.net/npm/dynamsoft-barcode-reader@10.2.10/dist/",
-                dlr: "https://cdn.jsdelivr.net/npm/dynamsoft-label-recognizer@3.2.30/dist/",
-                dcp: "https://cdn.jsdelivr.net/npm/dynamsoft-code-parser@2.2.10/dist/",
-                ddn: "https://cdn.jsdelivr.net/npm/dynamsoft-document-normalizer@2.2.10/dist/",
-            };
-            Dynamsoft.Core.CoreModule.loadWasm(["dbr"]);
-            Dynamsoft.License.LicenseManager.initLicense(license, true);
-            await initSDK();
-        } catch (e) {
-            console.log(e);
-            return false;
-        }
+window.startScanning = () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
 
-        return true;
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                video.play();
+                requestAnimationFrame(tick);
+            })
+            .catch(err => {
+                console.error('Error accessing the camera: ', err);
+            });
+
+        function tick() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                if (code) {
+                    DotNet.invokeMethodAsync('YourAssemblyName', 'ProcessQrCode', code.data);
+                }
+            }
+            requestAnimationFrame(tick);
+        }
+    } else {
+        console.error('getUserMedia API not supported.');
     }
-};
+}
