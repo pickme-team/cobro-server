@@ -170,6 +170,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
 
     public async Task<QrResponse> Qr(Guid bookId, Guid userId)
     {
+        Tuple<long?, int?> t = qrCodeService.GetByValue(bookId);
+        if (t.Item1 != null) return new QrResponse { Code = t.Item1!.ToString(), Ttl = t.Item2!.Value};
         var book = await context.Books.SingleAsync(b => b.Id == bookId);
         if (book.UserId != userId)
             throw new ForbiddenException("You did not book this");
