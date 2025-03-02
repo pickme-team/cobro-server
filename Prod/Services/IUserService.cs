@@ -13,5 +13,5 @@ public interface IUserService
     Task UpdateCity(Guid id, string city);
 
     Task<List<UserResponse>> AllUsers();
-    Task<string> UploadMedia(IFormFile file);
+    Task<string> UploadMedia(IFormFile file, Guid id);
 }
