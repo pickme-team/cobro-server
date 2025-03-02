@@ -28,6 +28,21 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         await context.SaveChangesAsync();
     }
 
+    public async Task EditDateBook(Guid bookId, DateTime start, DateTime end)
+    {
+        var book = await context.Books.FindAsync(bookId);
+
+        if (book == null)
+            return;
+
+        if (start >= end)
+            throw new ForbiddenException("Дата начала должна быть меньше даты конца");
+        
+        book.Start = start;
+        book.End = end;
+        await context.SaveChangesAsync();
+    }
+
     public async Task<Book?> GetBookById(Guid bookId) =>
         await context.Books.FindAsync(bookId);
 
