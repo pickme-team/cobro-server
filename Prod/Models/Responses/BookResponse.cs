@@ -15,7 +15,7 @@ public class BookResponse
 
     public string ZoneName { get; set; } = null!;
 
-    public OfficeSeat? OfficeSeat { get; set; }
+    public string? OfficeSeatNumber { get; set; }
 
     public Status Status { get; set; }
 
@@ -34,6 +34,6 @@ public class BookResponse
             TalkroomBook talkroomBook => talkroomBook.TalkroomZone.Name,
             _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
         },
-        OfficeSeat = book is OfficeBook ob ? ob.OfficeSeat : null
+        OfficeSeatNumber = book is OfficeBook ob ? ob.OfficeSeat.InnerNumber : null
     };
 }
