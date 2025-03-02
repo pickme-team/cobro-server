@@ -13,7 +13,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
             .Include(b => ((OpenBook)b).OpenZone)
             .Include(b => ((TalkroomBook)b).TalkroomZone)
             .Include(b => ((OfficeBook)b).OfficeSeat)
-            .Where(b => b.Status == Status.Active)
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
             .ToListAsync();
 
     public async Task CancelBook(Guid bookId)
