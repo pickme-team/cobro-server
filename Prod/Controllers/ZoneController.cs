@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -25,4 +26,8 @@ public class ZoneController(IZoneService zoneService) : ControllerBase
         string type,
         [FromBody] ZoneCreateRequest req) =>
         zoneService.Create(type, req);
+
+    [HttpGet("{id:guid}/current")]
+    public Task<int> Update([Required] [FromRoute] Guid id) =>
+        zoneService.GetCurrentUsersCount(id);
 }
