@@ -8,6 +8,7 @@ public interface IBookService
 {
     Task<List<Book>> GetAllActiveBooks();
     Task CancelBook(Guid bookId);
+    Task<Book?> GetBookById(Guid bookId);
     Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest);
     Task<BookResponse> Delete(Guid guid);
     Task<List<BookResponse>> GetBooks(Guid id, Guid? seatId);

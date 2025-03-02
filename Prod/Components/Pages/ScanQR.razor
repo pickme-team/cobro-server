@@ -1,0 +1,88 @@
+@page "/scan-qr"
+@using Prod.Exceptions
+@using Prod.Models.Database
+@using Prod.Services
+@inject IBookService BookService
+@inject IJSRuntime JsRuntime
+@inject IQrCodeService QrService
+@rendermode InteractiveServer
+
+<h3>Сканировать QR</h3>
+
+<div>
+    <video id="video" width="300" height="200"></video>
+    <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
+    <button @onclick="StartScanning">Начать сканирование</button>
+</div>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">@_errorMessage</div>
+}
+
+@if (_book != null)
+{
+    <div>
+        <h4>Информация о бронировании</h4>
+        <p>Описание: @_book.Description</p>
+        <p>Дата начала: @_book.Start</p>
+        <p>Дата окончания: @_book.End</p>
+        <p>Статус: @_book.Status</p>
+        <button @onclick="ChangeStatusToActive">Изменить статус на Active</button>
+    </div>
+}
+
+@code {
+    private Book? _book;
+    private string? _errorMessage;
+    private string? _qrCode;
+
+    private async Task StartScanning()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("startScanning");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка: {ex.Message}";
+        }
+    }
+
+    [JSInvokable]
+    public async Task ProcessQrCode(string qrCode)
+    {
+        try
+        {
+            _qrCode = qrCode;
+            var id = QrService[long.Parse(qrCode)];
+
+            if (id is not null)
+            {
+                _book = await BookService.GetBookById(id.Value);
+                if (_book is null)
+                    throw new Exception("Бронирование уже не существует");
+            }
+            else
+                throw new Exception("Неверный код");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    private async Task ChangeStatusToActive()
+    {
+        try
+        {
+            await BookService.ConfirmQr(new ConfirmQrRequest() { Code = _qrCode });
+            StateHasChanged();
+        }
+        catch (ForbiddenException ex)
+        {
+            _errorMessage = $"Неверный qr код";
+        }
+    }
+}

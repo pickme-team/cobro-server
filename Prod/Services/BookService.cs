@@ -28,6 +28,9 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
         await context.SaveChangesAsync();
     }
 
+    public async Task<Book?> GetBookById(Guid bookId) =>
+        await context.Books.FindAsync(bookId);
+
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {
         var zone = await context.Zones
