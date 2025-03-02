@@ -33,9 +33,19 @@
 }
 
 @code {
+    bool initialized = false;
     private Book? _book;
     private string? _errorMessage;
     private string? _qrCode;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            initialized = await JsRuntime.InvokeAsync<bool>("jsFunctions.setLicense", "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAzNzUzNTE3LVRYbFFjbTlxIiwibWFpblNlcnZlclVSTCI6Imh0dHBzOi8vbWRscy5keW5hbXNvZnRvbmxpbmUuY29tIiwib3JnYW5pemF0aW9uSUQiOiIxMDM3NTM1MTciLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJjaGVja0NvZGUiOjkzMDAyMTQ0MX0=");
+            StateHasChanged();
+        }
+    }
 
     private async Task StartScanning()
     {
