@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using Npgsql;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Prod.Components;
 using Prod.Exceptions;
 using Prod.Services;
 using Serilog;
@@ -90,7 +91,8 @@ builder.Logging.AddSerilog(logger).AddOpenTelemetry();
 
 builder.Host.UseSerilog();
 
-builder.Services.AddRazorPages();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
 services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
@@ -107,10 +109,13 @@ services.AddScoped<IZoneService, ZoneService>();
 var app = builder.Build();
 
 app.UseHttpsRedirection();
-app.MapRazorPages();
-
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseAntiforgery();
+app.MapStaticAssets();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.MapPrometheusScrapingEndpoint();
 app.UseHttpLogging();
