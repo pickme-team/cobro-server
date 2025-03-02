@@ -1,17 +1,15 @@
+@using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
 @inherits LayoutComponentBase
 
 @code {
-    [CascadingParameter] public Task<AuthenticationState> AuthenticationStateTask { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateTask;
-        var user = authState.User;
-
-        if (user.Identity is not null && !user.Identity.IsAuthenticated && !user.IsInRole("Admin"))
+        var id = await LocalStorage.GetItemAsStringAsync("adminId");
+        if (id is null)
         {
             Navigation.NavigateTo("/auth");
         }

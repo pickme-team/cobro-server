@@ -51,4 +51,33 @@ public class JwtService : IJwtService
         );
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
+    
+    public User GetUserFromToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = _signingKey;
+
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ValidateIssuer = true,
+            ValidIssuer = Issuer,
+            ValidateAudience = true,
+            ValidAudience = Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken validatedToken);
+        
+        var userIdClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimsIdentity.DefaultNameClaimType);
+        var adminClaim = principal.Claims.FirstOrDefault(c => c.Type == "admin");
+        
+        return new User
+        {
+            Id = Guid.Parse(userIdClaim.Value),
+            Role = bool.Parse(adminClaim.Value) ? Role.ADMIN : Role.CLIENT
+        };
+    }
 }
