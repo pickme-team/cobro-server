@@ -6,7 +6,7 @@ namespace Prod.Controllers;
 
 [ApiController]
 [Route("decorations")]
-public class DecorationsController(IDecorationService decorationService)
+public class DecorationsController(IDecorationService decorationService) : ControllerBase
 {
     [HttpGet]
     public Task<List<Decoration>> GetAll() => decorationService.GetAll();
