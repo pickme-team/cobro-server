@@ -31,7 +31,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
     public async Task EditDateBook(Guid bookId, DateTime start, DateTime end)
     {
         if (start > end)
-            throw new Exception("Start date cannot be greater than end date");
+            throw new ArgumentOutOfRangeException("Start date cannot be greater than end date");
         
         await CancelBook(bookId);
 
