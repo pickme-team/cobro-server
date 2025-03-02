@@ -45,8 +45,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
 
         context.Books.Add(new OfficeBook
         {
-            Start = req.From,
-            End = req.To,
+            Start = req.From.ToUniversalTime(),
+            End = req.To.ToUniversalTime(),
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
@@ -68,8 +68,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
 
         context.Books.Add(new TalkroomBook
         {
-            Start = req.From,
-            End = req.To,
+            Start = req.From.ToUniversalTime(),
+            End = req.To.ToUniversalTime(),
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
@@ -111,8 +111,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
 
         context.Books.Add(new OpenBook
         {
-            Start = req.From,
-            End = req.To,
+            Start = req.From.ToUniversalTime(),
+            End = req.To.ToUniversalTime(),
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
