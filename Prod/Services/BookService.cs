@@ -51,7 +51,7 @@ public class BookService(ProdContext context) : IBookService
             Description = req.Description,
             Status = Status.Pending,
             OfficeSeat = seat,
-            ZoneName = req.ZoneName,
+            Zone = req.Zone,
         });
         await context.SaveChangesAsync();
     }

@@ -12,8 +12,10 @@ public class BookResponse
     public DateTime End { get; set; }
 
     public string? Description { get; set; }
-    public string? ZoneName { get; set; }
+    public Zone Zone { get; set; }
 
+    public OfficeSeat? OfficeSeat { get; set; }
+    
     public Status Status { get; set; }
 
     public static BookResponse From(Book book) => new()
@@ -24,6 +26,7 @@ public class BookResponse
         End = book.End,
         Description = book.Description,
         Status = Status.Pending,
-        ZoneName = book.ZoneName,
+        Zone = book.Zone,
+        OfficeSeat = book is OfficeBook officeBook ? officeBook.OfficeSeat : null
     };
 }

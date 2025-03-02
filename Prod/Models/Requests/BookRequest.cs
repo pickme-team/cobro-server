@@ -1,3 +1,5 @@
+using Prod.Models.Database;
+
 namespace Prod.Models.Requests;
 
 public class BookRequest
@@ -8,5 +10,5 @@ public class BookRequest
 
     public string? Description { get; init; }
     
-    public string? ZoneName { get; set; }
+    public Zone Zone { get; set; }
 }
