@@ -28,7 +28,7 @@ public class BookResponse
         Start = book.Start,
         End = book.End,
         Description = book.Description,
-        Status = Status.Pending,
+        Status = book.Status,
         ZoneId = book switch
         {
             OfficeBook officeBook => officeBook.OfficeSeat.OfficeZoneId,
