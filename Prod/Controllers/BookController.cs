@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Prod.Models.Database;
 using Prod.Models.Requests;
+using Prod.Models.Responses;
 using Prod.Services;
 
 namespace Prod.Controllers;
@@ -15,9 +16,10 @@ public class BookController(IBookService bookService) : ControllerBase
     public Task Book(Guid id, [FromQuery(Name = "seat-id")] Guid? seatId, [FromBody] BookRequest req) =>
         bookService.Book(id, seatId, User.Id(), req);
 
+    [HttpGet("{id:guid}")]
+    public Task<List<BookResponse>> GetBooks(Guid id, [FromQuery(Name = "seat-id")] Guid? seatId) =>
+        bookService.GetBooks(id, seatId);
+
     [HttpDelete("{id:guid}")]
-    public async Task<Book> Delete(Guid id)
-    {
-        return await bookService.Delete(id);
-    }
+    public Task<BookResponse> Delete(Guid id) => bookService.Delete(id);
 }

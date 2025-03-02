@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Prod.Exceptions;
 using Prod.Models.Database;
 using Prod.Models.Requests;
+using Prod.Models.Responses;
 
 namespace Prod.Services;
 
@@ -119,11 +120,40 @@ public class BookService(ProdContext context) : IBookService
         await context.SaveChangesAsync();
     }
 
-    public async Task<Book> Delete(Guid guid)
+    public async Task<BookResponse> Delete(Guid id)
     {
-        Book? book = await context.Books.FindAsync(guid);
-        if (book is null) throw new ArgumentException();
+        var book = await context.Books.SingleAsync(b => b.Id == id);
         context.Books.Remove(book);
-        return book;
+        await context.SaveChangesAsync();
+        return BookResponse.From(book);
+    }
+
+    public async Task<List<BookResponse>> GetBooks(Guid id, Guid? seatId)
+    {
+        var zone = await context.Zones.SingleAsync(z => z.Id == id);
+        switch (zone)
+        {
+            case OfficeZone officeZone:
+                var seat = await context.Entry(officeZone)
+                    .Collection(z => z.Seats)
+                    .Query()
+                    .Include(s => s.Books)
+                    .SingleAsync(s => s.Id == seatId);
+                return seat.Books.Select(BookResponse.From).ToList();
+            case TalkroomZone talkroomZone:
+                await context.Entry(talkroomZone)
+                    .Collection(z => z.Books)
+                    .Query()
+                    .LoadAsync();
+                return talkroomZone.Books.Select(BookResponse.From).ToList();
+            case OpenZone openZone:
+                await context.Entry(openZone)
+                    .Collection(z => z.Books)
+                    .Query()
+                    .LoadAsync();
+                return openZone.Books.Select(BookResponse.From).ToList();
+            default:
+                return [];
+        }
     }
 }
