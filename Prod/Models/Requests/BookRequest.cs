@@ -4,11 +4,11 @@ namespace Prod.Models.Requests;
 
 public class BookRequest
 {
-    public DateTime From { get; init; }
+    public DateTime From { get; set; }
 
-    public DateTime To { get; init; }
+    public DateTime To { get; set; }
 
-    public string? Description { get; init; }
+    public string? Description { get; set; }
     
     public Zone Zone { get; set; }
 }

@@ -8,4 +8,10 @@ public interface IAuthService
     Task<AuthResponse> SignUp(SignUpRequest request);
 
     Task<AuthResponse> SignIn(SignInRequest request);
+
+    public Task SetTokenAsync(string token);
+
+    public Task<string> GetTokenAsync();
+
+    public Task RemoveTokenAsync();
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 using Prod.Exceptions;
 using Prod.Models.Database;
 using Prod.Models.Requests;
@@ -7,7 +8,7 @@ using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-public class AuthService(ProdContext context, IJwtService jwtService, IConfiguration configuration) : IAuthService
+public class AuthService(ProdContext context, IJwtService jwtService, IConfiguration configuration, IJSRuntime jsRuntime) : IAuthService
 {
     private readonly PasswordHasher<string> _passwordHasher = new();
 
@@ -36,4 +37,13 @@ public class AuthService(ProdContext context, IJwtService jwtService, IConfigura
 
         return new AuthResponse { Token = jwtService.GenerateToken(user), Admin = user.Role == Role.ADMIN };
     }
+    
+    public async Task SetTokenAsync(string token) => 
+        await jsRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", token);
+
+    public async Task<string> GetTokenAsync() =>
+        await jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+    public async Task RemoveTokenAsync() =>
+        await jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
 }
