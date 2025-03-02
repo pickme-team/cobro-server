@@ -15,6 +15,8 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<Zone> Zones { get; set; }
 
+    public DbSet<Passport> Passports { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();

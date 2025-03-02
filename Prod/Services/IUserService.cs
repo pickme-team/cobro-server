@@ -14,4 +14,8 @@ public interface IUserService
 
     Task<List<UserResponse>> AllUsers();
     Task<string> UploadMedia(IFormFile file, Guid id);
+    Task SetVerificationPhoto(IFormFile file, Guid id);
+    Task SetPassport(Guid userId, Passport passport);
+
+    Task<User> Get(Guid id);
 }
