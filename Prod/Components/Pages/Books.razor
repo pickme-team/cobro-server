@@ -100,9 +100,19 @@
         <div class="modal-content">
             <span class="close" @onclick="CloseModal">&times;</span>
             <h4>Информация о клиенте</h4>
-            <p>Имя: @_selectedUser.Name</p>
-            <p>Email: @_selectedUser.Email</p>
-            <p>Роль: @_selectedUser.Role</p>
+            <div class="client-info">
+                <div class="client-details">
+                    <p>Имя: @_selectedUser.Name</p>
+                    <p>Email: @_selectedUser.Email</p>
+                    <p>Роль: @_selectedUser.Role</p>
+                </div>
+                @if (_selectedUser.AvatarUrl != null)
+                {
+                    <div class="client-avatar">
+                        <img src="@_selectedUser.AvatarUrl.AbsolutePath" alt="Avatar" />
+                    </div>
+                }
+            </div>
         </div>
     </div>
 }
@@ -138,5 +148,23 @@
         color: black;
         text-decoration: none;
         cursor: pointer;
+    }
+
+    .client-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .client-details {
+        flex: 1;
+    }
+
+    .client-avatar {
+        margin-left: 20px;
+    }
+
+    .client-avatar img {
+        max-width: 100px;
+        border-radius: 50%;
     }
 </style>
