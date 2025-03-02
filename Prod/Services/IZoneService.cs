@@ -8,4 +8,5 @@ public interface IZoneService
     Task<List<Zone>> GetAll();
     Task<Zone> Get(Guid id);
     Task<Zone> Create(string type, ZoneCreateRequest req);
+    Task<int> GetCurrentUsersCount(Guid id);
 }

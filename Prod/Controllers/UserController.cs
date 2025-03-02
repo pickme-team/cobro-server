@@ -51,7 +51,7 @@ public class UserController(IUserService userService) : ControllerBase
     {
         try
         {
-            return Ok(await userService.UploadMedia(file));
+            return Ok(await userService.UploadMedia(file, User.Id()));
         }
         catch (ArgumentException e)
         {

@@ -244,4 +244,68 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
         book.Status = Status.Active;
         await context.SaveChangesAsync();
     }
+    
+        public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to)
+    {
+        var zone = await context.Zones.SingleAsync(z => z.Id == zoneId);
+        return zone switch
+        {
+            OfficeZone officeZone => await ValidateOfficeZone(officeZone, from, to),
+            TalkroomZone talkroomZone => await ValidateTalkroomZone(talkroomZone, from, to),
+            OpenZone openZone => await ValidateOpenZone(openZone, from, to),
+            _ => throw new ForbiddenException("Not a bookable zone")
+        };
+    }
+
+    private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to)
+    {
+        var seats = await context.Entry(zone)
+            .Collection(x => x.Seats)
+            .Query()
+            .ToListAsync();
+
+        return seats.Any(seat => !seat.Books.Any(b => 
+            (b.Status == Status.Active || b.Status == Status.Pending) && 
+            b.Start < to && from < b.End));
+    }
+
+    private async Task<bool> ValidateTalkroomZone(TalkroomZone zone, DateTime from, DateTime to)
+    {
+        return !await context.Entry(zone)
+            .Collection(z => z.Books)
+            .Query()
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
+            .AnyAsync(b => b.Start < to && from < b.End);
+    }
+
+    private async Task<bool> ValidateOpenZone(OpenZone zone, DateTime from, DateTime to)
+    {
+        var books = await context.Entry(zone)
+            .Collection(z => z.Books)
+            .Query()
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
+            .ToListAsync();
+
+        var events = books
+            .SelectMany(b => new List<(DateTime, bool)> { (b.Start, true), (b.End, false) })
+            .OrderBy(t => t.Item1)
+            .ToList();
+
+        var overlapCount = 0;
+        foreach (var (time, isStart) in events)
+        {
+            if (isStart)
+            {
+                overlapCount++;
+                if (overlapCount == zone.Capacity && time >= from && time <= to)
+                    return false;
+            }
+            else
+            {
+                overlapCount--;
+            }
+        }
+
+        return true;
+    }
 }

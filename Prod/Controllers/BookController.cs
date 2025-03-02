@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Prod.Exceptions;
 using Prod.Models.Database;
 using Prod.Models.Requests;
 using Prod.Models.Responses;
@@ -26,26 +27,44 @@ public class BookController(IBookService bookService) : ControllerBase
     [HttpGet("{id:guid}/qr")]
     public Task<QrResponse> Qr(Guid id) => bookService.Qr(id, User.Id());
 
-    [HttpPost("/confirm-qr")]
+    [HttpPatch("/confirm-qr")]
     [Authorize(Policy = "Admin")]
     public Task ConfirmQr([FromBody] ConfirmQrRequest req) =>
         bookService.ConfirmQr(req);
 
-    [HttpPost("last")]
+    [HttpGet("last")]
     public async Task<BookResponse?> Last() =>
         await bookService.LastBook(User.Id()) is { } book ? BookResponse.From(book) : null;
 
-    [HttpPost("history")]
+    [HttpGet("history")]
     public async Task<List<BookResponse>> History()
     {
         var books = await bookService.UserHistory(User.Id());
         return books.Select(BookResponse.From).ToList();
     }
 
-    [HttpPost("active")]
+    [HttpGet("active")]
     public async Task<List<BookResponse>> ActiveBooks()
     {
         var books = await bookService.ActiveBooks(User.Id());
         return books.Select(BookResponse.From).ToList();
     }
+    
+    [HttpGet("{id:guid}/validate")]
+    public async Task<ActionResult> Validate(Guid id, [FromQuery] DateTime from, [FromQuery] DateTime to)
+    {
+        try
+        {
+            var isAvailable = await bookService.Validate(id, from, to);
+            return isAvailable 
+                ? Ok() 
+                : StatusCode(StatusCodes.Status409Conflict, "Time not available");
+        }
+        catch (ForbiddenException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+    }
+
+
 }
