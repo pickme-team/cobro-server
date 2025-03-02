@@ -22,4 +22,6 @@ public class User
     public List<Book> Books { get; } = [];
 
     public Role Role { get; set; }
+    
+    public string Avatar { get; set; } = null!;
 }
