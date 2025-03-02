@@ -6,7 +6,7 @@ using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-public class BookService(ProdContext context, QrCodeService qrCodeService) : IBookService
+public class BookService(ProdContext context, IQrCodeService qrCodeService) : IBookService
 {
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {

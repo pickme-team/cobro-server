@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace Prod.Services;
 
-public class QrCodeService : BackgroundService
+public class QrCodeService : BackgroundService, IQrCodeService
 {
     private readonly ConcurrentDictionary<Guid, (long, DateTime)> _codes = new();
 
