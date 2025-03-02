@@ -13,5 +13,5 @@ public interface IBookService
     Task<List<Book>> ActiveBooks(Guid id);
     Task<List<Book>> UserHistory(Guid id);
     Task<Book?> LastBook(Guid id);
-    Task ConfirmQr(Guid id, ConfirmQrRequest req);
+    Task ConfirmQr(ConfirmQrRequest req);
 }

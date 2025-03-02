@@ -177,7 +177,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
             throw new ForbiddenException("This book is not pending");
 
         var code = Random.Shared.NextInt64(0, 9999999999);
-        qrCodeService[userId] = code;
+        qrCodeService[code] = bookId;
 
         return new QrResponse
         {
@@ -211,15 +211,12 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
             .OrderByDescending(b => b.End)
             .LastOrDefaultAsync();
 
-    public async Task ConfirmQr(Guid id, ConfirmQrRequest req)
+    public async Task ConfirmQr(ConfirmQrRequest req)
     {
-        var expectedCode = qrCodeService[id];
+        var expectedCode = qrCodeService[long.Parse(req.Code)];
         if (expectedCode == null)
             throw new ForbiddenException("Qr code not found or expired");
-        if (expectedCode != long.Parse(req.Code))
-            throw new ForbiddenException("Qr code doesn't match");
-
-        var book = await context.Books.SingleAsync(b => b.Id == id);
+        var book = await context.Books.SingleAsync(b => b.Id == expectedCode);
         if (book.Status != Status.Pending)
             throw new ForbiddenException("This book is not pending");
 

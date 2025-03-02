@@ -15,24 +15,22 @@ public class QrCodeService : IQrCodeService
         _db = _redis.GetDatabase();
     }
 
-    public long? this[Guid id]
+    public Guid? this[long id]
     {
         get => Get(id);
-        set => Set(id, value);
+        set => Set(value!.Value, id);
     }
 
-    private void Set(Guid id, long? code)
+    private void Set(Guid id, long code)
     {
-        if (code == null) return;
-
-        _db.StringSet(id.ToString(), code.Value.ToString(), TimeSpan.FromSeconds(Ttl));
+        _db.StringSet(code.ToString(), id.ToString(), TimeSpan.FromSeconds(Ttl));
     }
 
-    private long? Get(Guid id)
+    private Guid? Get(long id)
     {
         var value = _db.StringGet(id.ToString());
         if (!value.HasValue) return null;
 
-        return long.Parse(value);
+        return new Guid(value.ToString());
     }
 }

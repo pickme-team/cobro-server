@@ -4,7 +4,7 @@ namespace Prod.Models.Requests;
 
 public class ConfirmQrRequest : IValidatableObject
 {
-    [Required] [Length(10, 10)] public string Code { get; init; } = null!;
+    [Required] [Length(7, 10)] public string Code { get; init; } = null!;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

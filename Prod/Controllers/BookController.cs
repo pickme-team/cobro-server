@@ -26,10 +26,10 @@ public class BookController(IBookService bookService) : ControllerBase
     [HttpGet("{id:guid}/qr")]
     public Task<QrResponse> Qr(Guid id) => bookService.Qr(id, User.Id());
 
-    [HttpPost("{id:guid}/confirm-qr")]
+    [HttpPost("/confirm-qr")]
     [Authorize(Policy = "Admin")]
-    public Task ConfirmQr(Guid id, [FromBody] ConfirmQrRequest req) =>
-        bookService.ConfirmQr(id, req);
+    public Task ConfirmQr([FromBody] ConfirmQrRequest req) =>
+        bookService.ConfirmQr(req);
 
     [HttpPost("last")]
     public async Task<BookResponse?> Last() =>
