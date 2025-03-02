@@ -4,7 +4,7 @@ using Prod.Models.Requests;
 
 namespace Prod.Services;
 
-public class ZoneService(ProdContext context, IBookService bookService) : IZoneService
+public class ZoneService(ProdContext context, IBookService bookService, IZoneService zoneService) : IZoneService
 {
     public Task<List<Zone>> GetAll() => context.Zones.ToListAsync();
     public Task<Zone> Get(Guid id) => context.Zones.SingleAsync(z => z.Id == id);
@@ -75,7 +75,7 @@ public class ZoneService(ProdContext context, IBookService bookService) : IZoneS
 
     public async Task<int> GetCurrentUsersCount(Guid id)
     {
-        var zone = await context.Zones.SingleAsync(z => z.Id == id);
+        var zone = await zoneService.Get(id);
         var res = 0;
         bookService.GetBooks(zone.Id, null).Result.ForEach(book =>
         {
