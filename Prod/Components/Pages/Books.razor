@@ -40,6 +40,7 @@
     private void CloseModal()
     {
         _showModal = false;
+        StateHasChanged();
     }
 
     private async Task CancelBook(Guid bookId)
@@ -73,9 +74,10 @@
         @foreach (var book in group)
         {
             <li>
-                <p>Бронирование: @book.Description</p>
+                <p>Бронирование #@book.Id: @book.Description</p>
                 <p>Дата начала: @book.Start</p>
                 <p>Дата окончания: @book.End</p>
+                <p>Дата создания: @book.CreatedAt</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
                 <button @onclick="() => CancelBook(book.Id)">Отменить</button>
             </li>
