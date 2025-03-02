@@ -6,7 +6,7 @@ using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-public class BookService(ProdContext context) : IBookService
+public class BookService(ProdContext context, QrCodeService qrCodeService) : IBookService
 {
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {
@@ -155,5 +155,23 @@ public class BookService(ProdContext context) : IBookService
             default:
                 return [];
         }
+    }
+
+    public async Task<QrResponse> Qr(Guid bookId, Guid userId)
+    {
+        var book = await context.Books.SingleAsync(b => b.Id == bookId);
+        if (book.UserId != userId)
+            throw new ForbiddenException("You did not book this");
+        if (book.Status != Status.Pending)
+            throw new ForbiddenException("This book is not pending");
+
+        var code = Random.Shared.NextInt64(0, 9999999999);
+        qrCodeService[userId] = code;
+
+        return new QrResponse
+        {
+            Code = code.ToString().PadLeft(10, '0'),
+            Ttl = QrCodeService.Ttl
+        };
     }
 }

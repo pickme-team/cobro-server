@@ -22,4 +22,7 @@ public class BookController(IBookService bookService) : ControllerBase
 
     [HttpDelete("{id:guid}")]
     public Task<BookResponse> Delete(Guid id) => bookService.Delete(id);
+
+    [HttpGet("{id:guid}/qr")]
+    public Task<QrResponse> Qr(Guid id) => bookService.Qr(id, User.Id());
 }

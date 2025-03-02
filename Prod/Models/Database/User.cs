@@ -17,6 +17,8 @@ public class User
 
     public string Password { get; set; } = null!;
 
+    public Uri? AvatarUrl { get; set; }
+
     public string? City { get; set; }
 
     public List<Book> Books { get; } = [];

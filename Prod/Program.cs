@@ -99,6 +99,7 @@ services.ConfigureOptions<JwtBearerOptionsConfiguration>();
 services.AddAuthorization(o => o.AddPolicy("Admin", policy => policy.RequireClaim("admin", true.ToString())));
 services.AddAuthentication().AddJwtBearer();
 
+services.AddHostedService<QrCodeService>();
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();
 services.AddScoped<IBookService, BookService>();
