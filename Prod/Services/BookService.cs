@@ -191,7 +191,6 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
                     .Collection(z => z.Seats)
                     .Query()
                     .Include(s => s.Books)
-                    .ThenInclude(b => b.OfficeSeat)
                     .SingleAsync(s => s.Id == seatId);
                 return seat.Books.Select(BookResponse.From).ToList();
             case TalkroomZone talkroomZone:
