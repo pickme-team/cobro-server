@@ -9,7 +9,10 @@ public class LateService(ProdContext context) : BackgroundService
     {
         var now = DateTime.UtcNow;
         var nextIter = (int)Math.Ceiling((float)(now.Minute + 1) / 15) * 15 + 10 - 1;
-        var waitUntil = new DateTime(now.Year, now.Month, now.Day, now.Hour, nextIter, 0).ToUniversalTime();
+        var waitUntil = nextIter < 60
+            ? new DateTime(now.Year, now.Month, now.Day, now.Hour, nextIter, 0).ToUniversalTime()
+            : new DateTime(now.Year, now.Month, now.Day, now.Hour + 1, nextIter - 59, 0).ToUniversalTime();
+
 
         await Task.Delay(waitUntil - now, stoppingToken);
         while (!stoppingToken.IsCancellationRequested)
