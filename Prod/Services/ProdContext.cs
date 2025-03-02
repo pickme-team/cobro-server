@@ -15,6 +15,8 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
 
     public DbSet<Zone> Zones { get; set; }
 
+    public DbSet<Decoration> Decorations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
@@ -33,5 +35,10 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
             .HasValue<OpenZone>("Open")
             .HasValue<TalkroomZone>("Talkroom")
             .HasValue<Zone>("Misc");
+
+        modelBuilder.Entity<Decoration>()
+            .HasDiscriminator(d => d.Type)
+            .HasValue<RectangleDecoration>("Rectangle")
+            .HasValue<IconDecoration>("Icon");
     }
 }
