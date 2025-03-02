@@ -76,4 +76,17 @@ public class UserController(IUserService userService) : ControllerBase
         var user = await userService.UserById(User.Id());
         return user is null ? NotFound() : Ok(user);
     }
+    
+    [HttpPost("upload")]
+    public async Task<ActionResult<string>> UploadMedia([FromForm] IFormFile file)
+    {
+        try
+        {
+            return Ok(await userService.UploadMedia(file));
+        }
+        catch (ArgumentException e)
+        {
+            return BadRequest(new { Message = e.Message });
+        }
+    }
 }

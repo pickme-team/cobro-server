@@ -10,4 +10,7 @@ public interface IBookService
     Task<BookResponse> Delete(Guid guid);
     Task<List<BookResponse>> GetBooks(Guid id, Guid? seatId);
     Task<QrResponse> Qr(Guid bookId, Guid userId);
+    Task<List<Book>> ActiveBooks(Guid id);
+    Task<List<Book>> UserHistory(Guid id);
+    Task<Book?> LastBook(Guid id);
 }

@@ -9,11 +9,14 @@ public class OfficeSeatResponse
     public float X { get; set; }
 
     public float Y { get; set; }
+    
+    public string? InnerNumber { get; set; }
 
     public static OfficeSeatResponse From(OfficeSeat seat) => new()
     {
         Id = seat.Id,
         X = seat.X,
-        Y = seat.Y
+        Y = seat.Y,
+        InnerNumber = seat.InnerNumber,
     };
 }
