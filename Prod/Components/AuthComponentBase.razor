@@ -6,12 +6,13 @@
 @inherits LayoutComponentBase
 
 @code {
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         var id = await LocalStorage.GetItemAsStringAsync("adminId");
-        if (id is null)
+        if (string.IsNullOrEmpty(id))
         {
             Navigation.NavigateTo("/auth");
+            StateHasChanged();
         }
     }
 }

@@ -1,5 +1,6 @@
 @page "/auth"
 @using Blazored.LocalStorage
+@using Prod.Exceptions
 @using Prod.Services
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
@@ -21,6 +22,10 @@
             var user = JwtService.GetUserFromToken(response.Token);
             await LocalStorage.SetItemAsync("adminId", user.Id.ToString());
             Navigation.NavigateTo("/");
+        }
+        catch (UnauthorizedException ex)
+        {
+            _errorMessage = $"Неверно введёна почта или пароль";
         }
         catch (Exception ex)
         {
