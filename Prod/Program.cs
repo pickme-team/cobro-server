@@ -7,8 +7,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Prod.Exceptions;
 using Prod.Services;
-using Serilog;
-using Serilog.Sinks.Grafana.Loki;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -71,13 +69,13 @@ services.AddHttpLogging(o =>
                       | HttpLoggingFields.ResponseStatusCode
                       | HttpLoggingFields.Duration);
 
-var logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .CreateLogger();
-builder.Services.AddSingleton(logger);
-builder.Logging.AddSerilog(logger).AddOpenTelemetry();
-
-builder.Host.UseSerilog();
+// var logger = new LoggerConfiguration()
+//     .ReadFrom.Configuration(builder.Configuration)
+//     .CreateLogger();
+// builder.Services.AddSingleton(logger);
+// builder.Logging.AddSerilog(logger).AddOpenTelemetry();
+//
+// builder.Host.UseSerilog();
 
 services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
@@ -99,7 +97,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapPrometheusScrapingEndpoint();
-app.UseSerilogRequestLogging();
+app.UseHttpLogging();
+// app.UseSerilogRequestLogging();
 
 app.MapControllers();
 

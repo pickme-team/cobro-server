@@ -21,7 +21,7 @@
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U myuser -d mydatabase" ]
-      interval: 3s
+      interval: 1s
       timeout: 10s
       retries: 5
 
