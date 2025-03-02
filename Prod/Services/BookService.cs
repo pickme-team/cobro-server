@@ -13,25 +13,28 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             .Include(b => ((OpenBook)b).OpenZone)
             .Include(b => ((TalkroomBook)b).TalkroomZone)
             .Include(b => ((OfficeBook)b).OfficeSeat)
+            .Include(b => b.User)
             .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
             .ToListAsync();
 
     public async Task CancelBook(Guid bookId)
     {
         var book = await context.Books.FindAsync(bookId);
-        
+
         if (book == null)
             return;
-        
+
         book.Status = Status.Cancelled;
         await context.SaveChangesAsync();
     }
+
+    public async Task<Book?> GetBookById(Guid bookId) =>
+        await context.Books.FindAsync(bookId);
 
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {
         var zone = await context.Zones
             .SingleAsync(z => z.Id == zoneId);
-        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) throw new ForbiddenException("Not a public zone");
         switch (zone)
         {
             case OfficeZone officeZone:
@@ -140,9 +143,9 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         await context.SaveChangesAsync();
     }
 
-    public async Task<BookResponse> Delete(Guid guid)
+    public async Task<BookResponse> Delete(Guid id)
     {
-        var book = await GetById(guid);
+        var book = await GetById(id);
         context.Books.Remove(book);
         await context.SaveChangesAsync();
         return BookResponse.From(book);
@@ -191,7 +194,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
     public async Task<QrResponse> Qr(Guid bookId, Guid userId)
     {
         Tuple<long?, int?> t = qrCodeService.GetByValue(bookId);
-        if (t.Item1 != null) return new QrResponse { Code = t.Item1!.ToString(), Ttl = t.Item2!.Value};
+        if (t.Item1 != null) return new QrResponse { Code = t.Item1!.ToString(), Ttl = t.Item2!.Value };
         var book = await context.Books.SingleAsync(b => b.Id == bookId);
         if (book.UserId != userId)
             throw new ForbiddenException("You did not book this");
@@ -245,8 +248,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         book.Status = Status.Active;
         await context.SaveChangesAsync();
     }
-    
-        public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid)
+
+    public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid)
     {
         var zone = await context.Zones.SingleAsync(z => z.Id == zoneId);
         return zone switch
@@ -265,8 +268,9 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             .Query()
             .ToListAsync();
         if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
-        return seats.Any(seat => !seat.Books.Any(b => 
-            (b.Status == Status.Active || b.Status == Status.Pending) && 
+        
+        return seats.Any(seat => !seat.Books.Any(b =>
+            (b.Status == Status.Active || b.Status == Status.Pending) &&
             b.Start < to && from < b.End));
     }
 
