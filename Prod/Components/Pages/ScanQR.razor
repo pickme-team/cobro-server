@@ -37,14 +37,6 @@
     private string? _errorMessage;
     private string? _qrCode;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JsRuntime.InvokeVoidAsync("initializeQrScanner", DotNetObjectReference.Create(this));
-        }
-    }
-
     private async Task StartScanning()
     {
         try
