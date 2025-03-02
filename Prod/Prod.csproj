@@ -10,6 +10,7 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="AspNetCore.Yandex.ObjectStorage" Version="0.2.2"/>
+        <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
         <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0"/>
         <PackageReference Include="Microsoft.ApplicationInsights.PerfCounterCollector" Version="2.23.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2"/>
@@ -28,6 +29,7 @@
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0"/>
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.8.24"/>
         <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="7.3.1"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="7.3.1"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="7.3.1"/>
@@ -46,7 +48,7 @@
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>
-        <Content Remove="Components\Pages\Weather.razor" />
+        <Content Remove="Components\Pages\Weather.razor"/>
     </ItemGroup>
 
     <ItemGroup>

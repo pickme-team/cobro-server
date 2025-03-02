@@ -7,4 +7,5 @@ public interface IJwtService
 {
     TokenValidationParameters ValidationParameters { get; }
     string GenerateToken(User user);
+    public User GetUserFromToken(string token);
 }

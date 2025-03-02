@@ -2,8 +2,9 @@ using System.Configuration;
 using System.Net;
 using System.Reflection;
 using AspNetCore.Yandex.ObjectStorage.Extensions;
-using Microsoft.AspNetCore.HttpLogging;
+using Blazored.LocalStorage;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using Microsoft.OpenApi.Models;
 using Npgsql;
 using OpenTelemetry.Metrics;
@@ -84,12 +85,20 @@ var logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 builder.Services.AddSingleton(logger);
+services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetSection("Redis:Configuration").Value;
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
 builder.Logging.AddSerilog(logger).AddOpenTelemetry();
 
 builder.Host.UseSerilog();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+services.AddBlazoredLocalStorage();
 
 services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
@@ -99,7 +108,7 @@ services.AddYandexObjectStorage(builder.Configuration);
 
 services.AddHostedService<LateService>();
 
-services.AddSingleton<IQrCodeService, QrCodeService>();
+services.AddScoped<IQrCodeService, QrCodeService>();
 services.AddHostedService<QrCodeService>();
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();

@@ -1,12 +1,19 @@
-using System.Collections.Concurrent;
+using StackExchange.Redis;
 
 namespace Prod.Services;
 
-public class QrCodeService : BackgroundService, IQrCodeService
+public class QrCodeService : IQrCodeService
 {
-    private readonly ConcurrentDictionary<Guid, (long, DateTime)> _codes = new();
+    private readonly IConnectionMultiplexer _redis;
+    private IDatabase _db;
 
     public const int Ttl = 3 * 60;
+
+    public QrCodeService(IConnectionMultiplexer redis)
+    {
+        _redis = redis;
+        _db = _redis.GetDatabase();
+    }
 
     public long? this[Guid id]
     {
@@ -18,32 +25,14 @@ public class QrCodeService : BackgroundService, IQrCodeService
     {
         if (code == null) return;
 
-        _codes[id] = (code.Value, DateTime.UtcNow.AddSeconds(Ttl));
+        _db.StringSet(id.ToString(), code.Value.ToString(), TimeSpan.FromSeconds(Ttl));
     }
 
     private long? Get(Guid id)
     {
-        if (!_codes.TryGetValue(id, out var result)) return null;
+        var value = _db.StringGet(id.ToString());
+        if (!value.HasValue) return null;
 
-        var (code, ttl) = result;
-        if (ttl >= DateTime.UtcNow) return code;
-
-        _codes.Remove(id, out _);
-        return null;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            await Task.Delay(1000 * 60, stoppingToken);
-
-            foreach (var keyValuePair in _codes)
-            {
-                var (_, ttl) = keyValuePair.Value;
-                if (ttl < DateTime.UtcNow)
-                    _codes.Remove(keyValuePair.Key, out _);
-            }
-        }
+        return long.Parse(value);
     }
 }

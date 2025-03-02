@@ -12,7 +12,6 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService) : IB
     {
         var zone = await context.Zones
             .SingleAsync(z => z.Id == zoneId);
-
         switch (zone)
         {
             case OfficeZone officeZone:
