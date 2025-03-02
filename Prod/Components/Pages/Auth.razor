@@ -1,12 +1,14 @@
 @page "/auth"
+@using Blazored.LocalStorage
 @using Prod.Services
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
+@inject IJwtService JwtService
 @rendermode InteractiveServer
 @code {
     private readonly SignInRequest _signInRequest = new SignInRequest();
     private readonly SignUpRequest _signUpRequest = new SignUpRequest();
-    private bool _isSignUpMode;
     private string? _errorMessage;
 
     private async Task HandleSignIn()
@@ -14,7 +16,10 @@
         try
         {
             var response = await AuthService.SignIn(_signInRequest);
-            await AuthService.SetTokenAsync(response.Token);
+            if (!response.Admin)
+                throw new Exception("Вы не админ");
+            var user = JwtService.GetUserFromToken(response.Token);
+            await LocalStorage.SetItemAsync("adminId", user.Id.ToString());
             Navigation.NavigateTo("/");
         }
         catch (Exception ex)
@@ -22,33 +27,16 @@
             _errorMessage = $"Ошибка: {ex.Message}";
         }
     }
-
-    private async Task HandleSignUp()
-    {
-        try
-        {
-            var response = await AuthService.SignUp(_signUpRequest);
-            await AuthService.SetTokenAsync(response.Token);
-            Navigation.NavigateTo("/");
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Ошибка: {ex.Message}";
-        }
-    }
-
-    private string GetSignInFormStyle() => _isSignUpMode ? "display: none;" : "display: block;";
-    private string GetSignUpFormStyle() => _isSignUpMode ? "display: block;" : "display: none;";
 }
 
-<h3>@(_isSignUpMode ? "Регистрация" : "Вход")</h3>
+<h3>Вход</h3>
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
     <div class="alert alert-danger">@_errorMessage</div>
 }
 
-<EditForm Model="@_signInRequest" OnValidSubmit="HandleSignIn" style="@GetSignInFormStyle()" FormName="SignInForm">
+<EditForm Model="@_signInRequest" OnValidSubmit="HandleSignIn" style="display: block;" FormName="SignInForm">
     <DataAnnotationsValidator />
     <ValidationSummary />
     <div>
@@ -60,24 +48,4 @@
         <InputText @bind-Value="_signInRequest.Password" type="password" class="form-control" />
     </div>
     <button type="submit" class="btn btn-primary">Войти</button>
-    <button type="button" class="btn btn-link" @onclick="() => _isSignUpMode = true">Зарегистрироваться</button>
-</EditForm>
-
-<EditForm Model="@_signUpRequest" OnValidSubmit="HandleSignUp" style="@GetSignUpFormStyle()" FormName="SignUpForm">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div>
-        <label>Имя</label>
-        <InputText @bind-Value="_signUpRequest.Name" class="form-control" />
-    </div>
-    <div>
-        <label>Электронная почта</label>
-        <InputText @bind-Value="_signUpRequest.Email" class="form-control" />
-    </div>
-    <div>
-        <label>Пароль</label>
-        <InputText @bind-Value="_signUpRequest.Password" type="password" class="form-control" />
-    </div>
-    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
-    <button type="button" class="btn btn-link" @onclick="() => _isSignUpMode = false">Войти</button>
 </EditForm>

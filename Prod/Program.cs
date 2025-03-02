@@ -2,6 +2,7 @@ using System.Configuration;
 using System.Net;
 using System.Reflection;
 using AspNetCore.Yandex.ObjectStorage.Extensions;
+using Blazored.LocalStorage;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 using Microsoft.OpenApi.Models;
@@ -96,6 +97,8 @@ builder.Host.UseSerilog();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+services.AddBlazoredLocalStorage();
 
 services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
