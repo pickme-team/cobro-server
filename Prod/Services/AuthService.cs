@@ -19,14 +19,12 @@ public class AuthService(ProdContext context, IJwtService jwtService, IConfigura
             Name = request.Name,
             Email = request.Email,
             Password = hash,
-            Role = request.Email.EndsWith(configuration["CORPDOMAIN"] ?? "isntrui.ru") ? 
-                    Role.INTERNAL : Role.CLIENT
-
+            Role = request.Email.EndsWith(configuration["CORPDOMAIN"] ?? "isntrui.ru") ? Role.INTERNAL : Role.CLIENT
         };
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        return new AuthResponse { Token = jwtService.GenerateToken(user) };
+        return new AuthResponse { Token = jwtService.GenerateToken(user), Admin = false };
     }
 
     public async Task<AuthResponse> SignIn(SignInRequest request)
@@ -36,6 +34,6 @@ public class AuthService(ProdContext context, IJwtService jwtService, IConfigura
         var result = _passwordHasher.VerifyHashedPassword(user.Email, user.Password, request.Password);
         if (result == PasswordVerificationResult.Failed) throw new UnauthorizedException();
 
-        return new AuthResponse { Token = jwtService.GenerateToken(user) };
+        return new AuthResponse { Token = jwtService.GenerateToken(user), Admin = user.Role == Role.ADMIN };
     }
 }

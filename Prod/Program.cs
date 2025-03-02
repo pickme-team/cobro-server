@@ -68,12 +68,6 @@ services.AddOpenTelemetry()
         options.AddAspNetCoreInstrumentation();
     });
 
-services.AddHttpLogging(o =>
-    o.LoggingFields = HttpLoggingFields.RequestMethod
-                      | HttpLoggingFields.RequestPath
-                      | HttpLoggingFields.ResponseStatusCode
-                      | HttpLoggingFields.Duration);
-
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .WriteTo.Console()
@@ -123,7 +117,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapPrometheusScrapingEndpoint();
-app.UseHttpLogging();
 app.UseSerilogRequestLogging();
 
 app.MapControllers();
