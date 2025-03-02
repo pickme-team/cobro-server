@@ -46,6 +46,10 @@ public class BookController(IBookService bookService) : ControllerBase
     [HttpGet]
     [Authorize(Policy = "Admin")]
     public Task<List<BookWithUserResponse>> GetAll() => bookService.GetAll();
+    
+    [HttpGet("/admin/active")]
+    [Authorize(Policy = "Admin")]
+    public List<BookWithUserResponse> GetAllAdmin() => bookService.GetAll().Result.FindAll(b => b.Status == Status.Active || b.Status == Status.Pending);
 
     [HttpGet("active")]
     public async Task<List<BookResponse>> ActiveBooks()
