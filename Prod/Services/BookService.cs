@@ -175,7 +175,7 @@ public class BookService(ProdContext context, QrCodeService qrCodeService) : IBo
             Ttl = QrCodeService.Ttl
         };
     }
-    
+
     public async Task<List<Book>> ActiveBooks(Guid id) =>
         await context.Books
             .Where(b => b.UserId == id && b.Status == Status.Active)
@@ -191,4 +191,20 @@ public class BookService(ProdContext context, QrCodeService qrCodeService) : IBo
             .Where(b => b.UserId == id && b.Status == Status.Ended)
             .OrderByDescending(b => b.End)
             .LastOrDefaultAsync();
+
+    public async Task ConfirmQr(Guid id, ConfirmQrRequest req)
+    {
+        var expectedCode = qrCodeService[id];
+        if (expectedCode == null)
+            throw new ForbiddenException("Qr code not found or expired");
+        if (expectedCode != long.Parse(req.Code))
+            throw new ForbiddenException("Qr code doesn't match");
+
+        var book = await context.Books.SingleAsync(b => b.Id == id);
+        if (book.Status != Status.Pending)
+            throw new ForbiddenException("This book is not pending");
+
+        book.Status = Status.Active;
+        await context.SaveChangesAsync();
+    }
 }
