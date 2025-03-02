@@ -10,9 +10,9 @@
 <div class="filters">
     <input type="text" placeholder="Поиск по имени пользователя" @bind="userNameFilter" />
     <label>Дата начала:</label>
-    <input type="date" @bind="startDateFilter" />
+    <input type="datetime-local" @bind="startDateFilter" />
     <label>Дата окончания:</label>
-    <input type="date" @bind="endDateFilter" />
+    <input type="datetime-local" @bind="endDateFilter" />
     <button @onclick="ApplyFilters">Применить фильтры</button>
 </div>
 
@@ -83,8 +83,8 @@
     private void EditDates(Guid bookId, DateTime start, DateTime end)
     {
         _editingBookId = bookId;
-        _editStart = start;
-        _editEnd = end;
+        _editStart = start.ToUniversalTime();
+        _editEnd = end.ToUniversalTime();
         _showEditModal = true;
     }
 
@@ -113,8 +113,8 @@
     {
         _filteredBooks = _books.Where(b =>
             (string.IsNullOrEmpty(userNameFilter) || b.User.Name.Contains(userNameFilter, StringComparison.OrdinalIgnoreCase)) &&
-            (!startDateFilter.HasValue || b.Start >= startDateFilter.Value) &&
-            (!endDateFilter.HasValue || b.End <= endDateFilter.Value)).ToList();
+            (!startDateFilter.HasValue || b.Start >= startDateFilter.Value.ToUniversalTime()) &&
+            (!endDateFilter.HasValue || b.End <= endDateFilter.Value.ToUniversalTime())).ToList();
     }
 }
 
@@ -131,8 +131,8 @@
         {
             <li>
                 <p>Бронирование: @book.Description</p>
-                <p>Дата начала: @book.Start</p>
-                <p>Дата окончания: @book.End</p>
+                <p>Дата начала: @book.Start.ToUniversalTime()</p>
+                <p>Дата окончания: @book.End.ToUniversalTime()</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
                 <button @onclick="() => CancelBook(book.Id)">Отменить</button>
                 @if (book.Status == Status.Pending)
@@ -175,11 +175,11 @@
             <h4>Редактировать даты</h4>
             <div>
                 <label>Дата начала:</label>
-                <input type="date" @bind="(_editStart)" />
+                <input type="datetime-local" @bind="(_editStart)" />
             </div>
             <div>
                 <label>Дата окончания:</label>
-                <input type="date" @bind="(_editEnd)" />
+                <input type="datetime-local" @bind="(_editEnd)" />
             </div>
             <button @onclick="SaveDates">Сохранить</button>
         </div>
