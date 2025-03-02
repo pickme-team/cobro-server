@@ -9,8 +9,11 @@
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "80:8080"
+
   postgres:
     image: postgres:latest
     env_file:
@@ -24,6 +27,18 @@
       interval: 1s
       timeout: 10s
       retries: 5
+
+  redis:
+    image: redis:latest
+    ports:
+      - "8071:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
 #  prometheus:
 #    image: prom/prometheus:latest
@@ -83,6 +98,7 @@
 
 volumes:
   postgres_data:
+  redis_data:
   grafana_data:
   prometheus_data:
   loki_data:

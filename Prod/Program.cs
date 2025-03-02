@@ -1,8 +1,7 @@
-using System.Configuration;
 using System.Reflection;
 using AspNetCore.Yandex.ObjectStorage.Extensions;
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using Microsoft.OpenApi.Models;
 using Npgsql;
 using OpenTelemetry.Metrics;
@@ -83,6 +82,12 @@ var logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 builder.Services.AddSingleton(logger);
+services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetSection("Redis:Configuration").Value;
+    return ConnectionMultiplexer.Connect(configuration);
+});
+
 builder.Logging.AddSerilog(logger).AddOpenTelemetry();
 
 builder.Host.UseSerilog();
@@ -96,8 +101,7 @@ services.AddAuthorization(o => o.AddPolicy("Admin", policy => policy.RequireClai
 services.AddAuthentication().AddJwtBearer();
 services.AddYandexObjectStorage(builder.Configuration);
 
-services.AddSingleton<IQrCodeService, QrCodeService>();
-services.AddHostedService<QrCodeService>();
+services.AddScoped<IQrCodeService, QrCodeService>();
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();
 services.AddScoped<IBookService, BookService>();
