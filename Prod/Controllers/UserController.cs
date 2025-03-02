@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Prod.Exceptions;
 using Prod.Models;
 using Prod.Models.Database;
 using Prod.Models.Responses;
@@ -81,5 +82,19 @@ public class UserController(IUserService userService) : ControllerBase
     {
         User user = await userService.Get(User.Id());
         return Ok(user.Passport);
+    }
+
+    [HttpGet("{id:guid}/verification")]
+    public async Task<ActionResult> Verification(Guid id)
+    {
+        try
+        {
+            var user = await userService.Get(id);
+            return Ok(user.Passport != null || user.Role == Role.ADMIN || user.Role == Role.INTERNAL);
+        }
+        catch (ForbiddenException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 }
