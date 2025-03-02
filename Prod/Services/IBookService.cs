@@ -18,4 +18,5 @@ public interface IBookService
     Task<Book?> LastBook(Guid id);
     Task ConfirmQr(ConfirmQrRequest req);
     Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid);
+    Task<List<BookWithUserResponse>> GetAll();
 }
