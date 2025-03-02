@@ -6,7 +6,7 @@ using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-public class BookService(ProdContext context) : IBookService
+public class BookService(ProdContext context, IQrCodeService qrCodeService) : IBookService
 {
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {
@@ -45,8 +45,8 @@ public class BookService(ProdContext context) : IBookService
 
         context.Books.Add(new OfficeBook
         {
-            Start = req.From,
-            End = req.To,
+            Start = req.From.ToUniversalTime(),
+            End = req.To.ToUniversalTime(),
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
@@ -68,8 +68,8 @@ public class BookService(ProdContext context) : IBookService
 
         context.Books.Add(new TalkroomBook
         {
-            Start = req.From,
-            End = req.To,
+            Start = req.From.ToUniversalTime(),
+            End = req.To.ToUniversalTime(),
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
@@ -111,8 +111,8 @@ public class BookService(ProdContext context) : IBookService
 
         context.Books.Add(new OpenBook
         {
-            Start = req.From,
-            End = req.To,
+            Start = req.From.ToUniversalTime(),
+            End = req.To.ToUniversalTime(),
             UserId = userId,
             Description = req.Description,
             Status = Status.Pending,
@@ -156,5 +156,55 @@ public class BookService(ProdContext context) : IBookService
             default:
                 return [];
         }
+    }
+
+    public async Task<QrResponse> Qr(Guid bookId, Guid userId)
+    {
+        var book = await context.Books.SingleAsync(b => b.Id == bookId);
+        if (book.UserId != userId)
+            throw new ForbiddenException("You did not book this");
+        if (book.Status != Status.Pending)
+            throw new ForbiddenException("This book is not pending");
+
+        var code = Random.Shared.NextInt64(0, 9999999999);
+        qrCodeService[userId] = code;
+
+        return new QrResponse
+        {
+            Code = code.ToString().PadLeft(10, '0'),
+            Ttl = QrCodeService.Ttl
+        };
+    }
+
+    public async Task<List<Book>> ActiveBooks(Guid id) =>
+        await context.Books
+            .Where(b => b.UserId == id && b.Status == Status.Active)
+            .ToListAsync();
+
+    public async Task<List<Book>> UserHistory(Guid id) =>
+        await context.Books
+            .Where(b => b.UserId == id && b.Status != Status.Active)
+            .ToListAsync();
+
+    public async Task<Book?> LastBook(Guid id) =>
+        await context.Books
+            .Where(b => b.UserId == id && b.Status == Status.Ended)
+            .OrderByDescending(b => b.End)
+            .LastOrDefaultAsync();
+
+    public async Task ConfirmQr(Guid id, ConfirmQrRequest req)
+    {
+        var expectedCode = qrCodeService[id];
+        if (expectedCode == null)
+            throw new ForbiddenException("Qr code not found or expired");
+        if (expectedCode != long.Parse(req.Code))
+            throw new ForbiddenException("Qr code doesn't match");
+
+        var book = await context.Books.SingleAsync(b => b.Id == id);
+        if (book.Status != Status.Pending)
+            throw new ForbiddenException("This book is not pending");
+
+        book.Status = Status.Active;
+        await context.SaveChangesAsync();
     }
 }

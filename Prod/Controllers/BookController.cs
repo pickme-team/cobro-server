@@ -22,4 +22,30 @@ public class BookController(IBookService bookService) : ControllerBase
 
     [HttpDelete("{id:guid}")]
     public Task<BookResponse> Delete(Guid id) => bookService.Delete(id);
+
+    [HttpGet("{id:guid}/qr")]
+    public Task<QrResponse> Qr(Guid id) => bookService.Qr(id, User.Id());
+
+    [HttpPost("{id:guid}/confirm-qr")]
+    [Authorize(Policy = "Admin")]
+    public Task ConfirmQr(Guid id, [FromBody] ConfirmQrRequest req) =>
+        bookService.ConfirmQr(id, req);
+
+    [HttpPost("last")]
+    public async Task<BookResponse?> Last() =>
+        await bookService.LastBook(User.Id()) is { } book ? BookResponse.From(book) : null;
+
+    [HttpPost("history")]
+    public async Task<List<BookResponse>> History()
+    {
+        var books = await bookService.UserHistory(User.Id());
+        return books.Select(BookResponse.From).ToList();
+    }
+
+    [HttpPost("active")]
+    public async Task<List<BookResponse>> ActiveBooks()
+    {
+        var books = await bookService.ActiveBooks(User.Id());
+        return books.Select(BookResponse.From).ToList();
+    }
 }

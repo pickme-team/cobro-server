@@ -1,4 +1,6 @@
+using System.Configuration;
 using System.Reflection;
+using AspNetCore.Yandex.ObjectStorage.Extensions;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -66,12 +68,6 @@ services.AddOpenTelemetry()
         options.AddAspNetCoreInstrumentation();
     });
 
-services.AddHttpLogging(o =>
-    o.LoggingFields = HttpLoggingFields.RequestMethod
-                      | HttpLoggingFields.RequestPath
-                      | HttpLoggingFields.ResponseStatusCode
-                      | HttpLoggingFields.Duration);
-
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .WriteTo.Console()
@@ -98,7 +94,10 @@ services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
 services.AddAuthorization(o => o.AddPolicy("Admin", policy => policy.RequireClaim("admin", true.ToString())));
 services.AddAuthentication().AddJwtBearer();
+services.AddYandexObjectStorage(builder.Configuration);
 
+services.AddSingleton<IQrCodeService, QrCodeService>();
+services.AddHostedService<QrCodeService>();
 services.AddScoped<IAuthService, AuthService>();
 services.AddScoped<IUserService, UserService>();
 services.AddScoped<IBookService, BookService>();
@@ -118,7 +117,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapPrometheusScrapingEndpoint();
-app.UseHttpLogging();
 app.UseSerilogRequestLogging();
 
 app.MapControllers();
