@@ -1,10 +1,11 @@
+using AspNetCore.Yandex.ObjectStorage;
 using AspNetCore.Yandex.ObjectStorage.Object.Responses;
 using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class UserService(ProdContext context, YandexObjectStorage _objectStoreService) : IUserService
+public class UserService(ProdContext context, IYandexStorageService _objectStoreService) : IUserService
 {
     public async Task<User?> UserById(Guid id) => await context.Users.FindAsync(id);
 
@@ -31,9 +32,11 @@ public class UserService(ProdContext context, YandexObjectStorage _objectStoreSe
 
     public Task<List<User>> AllUsers() => context.Users.ToListAsync();
 
-    public Task<string> uploadMedia(IFormFile file)
+    public async Task<string> UploadMedia(IFormFile file)
     {
-        S3ObjectPutResponse response = await _objectStoreService.ObjectService.PutAsync(byteArr, fileName);
-        S3ObjectDeleteResponse response = await _objectStoreService.ObjectService.DeleteAsync(filename);
+        if (file.FileName == null || file.Length == 0 || file.FileName.Split(".")[^1] == null) throw new ArgumentException("Invalid file");
+        string fileName = Guid.NewGuid() + "." + file.FileName.Split('.')[^1];;
+        await _objectStoreService.ObjectService.PutAsync(file.OpenReadStream(), fileName);
+        return "https://storage.yandexcloud.net/cobro/" + fileName;
     } 
 }

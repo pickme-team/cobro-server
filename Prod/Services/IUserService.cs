@@ -10,4 +10,6 @@ public interface IUserService
     Task Delete(User user);
     Task Create(User user);
     Task<List<User>> AllUsers();
+    Task<string> UploadMedia(IFormFile file);
+
 }
