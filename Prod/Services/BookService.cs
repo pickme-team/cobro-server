@@ -73,6 +73,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
                 break;
             default:
                 throw new ForbiddenException("Not a bookable zone");
+            
+            
         }
     }
 

@@ -117,6 +117,7 @@ services.AddScoped<IZoneService, ZoneService>();
 services.AddScoped<IDecorationService, DecorationService>();
 services.AddScoped<IActionService, ActionService>();
 services.AddScoped<IRequestService, RequestService>();
+services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

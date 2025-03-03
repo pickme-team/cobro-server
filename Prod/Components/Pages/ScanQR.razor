@@ -11,11 +11,16 @@
 <h3>Сканировать QR</h3>
 
 <div class="select">
-    <button @onclick="GetCameras">Get Cameras</button>
+    <button @onclick="GetCameras">Камеры</button>
     <label for="videoSource"></label>
-    <select id="@videoSourceId"></select>
-    <button @onclick="StartCamera">Open Camera</button>
-    <button @onclick="StopCamera">Stop Camera</button>
+    <select id="@videoSourceId" @onchange="OnCameraSelected">
+        @foreach (var camera in _cameras)
+        {
+            <option value="@camera.deviceId">@camera.label</option>
+        }
+    </select>
+    <button @onclick="StartCamera">Запустить камеру</button>
+    <button @onclick="StopCamera">Остановить камеру</button>
 </div>
 
 <video id="videoElement" width="300" height="200"></video>
@@ -57,22 +62,36 @@
     </div>
 }
 
+<div class="manual-input">
+    <label for="qrCodeInput">Введите QR код вручную:</label>
+    <input type="text" id="qrCodeInput" @bind="_manualQrCode">
+    <button @onclick="ProcessManualQrCode">Обработать</button>
+</div>
+
 @code {
+    public class MediaDeviceInfo
+    {
+        public string deviceId { get; set; }
+        public string label { get; set; }
+    }
+
     private Book? _book;
     private User? _user;
     private string? _errorMessage;
     private string? _qrCode;
+    private string? _manualQrCode;
     private string videoSourceId = "videoSource";
     private Timer? _timer;
+    private List<MediaDeviceInfo> _cameras = new List<MediaDeviceInfo>();
+    private string? _selectedCameraId;
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            await GetCameras();
             StateHasChanged();
         }
-
-        return Task.CompletedTask;
     }
 
     public async Task ReturnBarcodeResultsAsync(string qrCode)
@@ -100,17 +119,22 @@
         StateHasChanged();
     }
 
-    public Task GetCameras()
+    public async Task GetCameras()
     {
-        return Task.CompletedTask;
-        // TODO Реализуйте получение списка камер
+        _cameras = await JsRuntime.InvokeAsync<List<MediaDeviceInfo>>("jsFunctions.getCameras");
+        StateHasChanged();
+    }
+
+    public async Task OnCameraSelected(ChangeEventArgs e)
+    {
+        _selectedCameraId = e.Value?.ToString();
     }
 
     public async Task StartCamera()
     {
         try
         {
-            await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera", "videoElement");
+            await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera", "videoElement", _selectedCameraId);
             _timer = new Timer((_) => CaptureAndScanFrame().ConfigureAwait(false), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
         }
         catch (TaskCanceledException)
@@ -122,7 +146,6 @@
         }
     }
 
-
     public async Task StopCamera()
     {
         await JsRuntime.InvokeVoidAsync("jsFunctions.stopCamera", "videoElement");
@@ -133,16 +156,11 @@
     {
         try
         {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
+            var frameData = await JsRuntime.InvokeAsync<byte[]>("jsFunctions.captureFrame");
+            string? result = await QrService.ScanQrCode(frameData);
+            if (!string.IsNullOrEmpty(result))
             {
-                string dataUrl = await JsRuntime.InvokeAsync<string>("jsFunctions.captureFrame", cts.Token, "videoElement", "canvasElement");
-                byte[] imageBytes = Convert.FromBase64String(dataUrl.Split(',')[1]);
-
-                string? result = await QrService.ScanQrCode(imageBytes);
-                if (!string.IsNullOrEmpty(result))
-                {
-                    await ReturnBarcodeResultsAsync(result);
-                }
+                await ReturnBarcodeResultsAsync(result);
             }
         }
         catch (TaskCanceledException)
@@ -151,6 +169,14 @@
         catch (Exception ex)
         {
             _errorMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private async Task ProcessManualQrCode()
+    {
+        if (!string.IsNullOrEmpty(_manualQrCode))
+        {
+            await ReturnBarcodeResultsAsync(_manualQrCode);
         }
     }
 
@@ -166,12 +192,11 @@
 
             StateHasChanged();
         }
-        catch (ForbiddenException)
+        catch (ForbiddenException ex)
         {
             _errorMessage = $"Неверный QR код";
         }
     }
-
 }
 
 <style>
@@ -241,5 +266,18 @@
 
     .filters {
         margin-bottom: 20px;
+    }
+
+    .manual-input {
+        margin-top: 20px;
+    }
+
+    .manual-input label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .manual-input input {
+        margin-right: 10px;
     }
 </style>
