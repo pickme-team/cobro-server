@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Prod.Exceptions;
 using Prod.Models;
 using Prod.Models.Database;
@@ -54,7 +55,7 @@ public class UserController(IUserService userService) : ControllerBase
         }
         catch (ArgumentException e)
         {
-            return BadRequest(new { Message = e.Message });
+            return BadRequest(new { e.Message });
         }
     }
 
@@ -84,8 +85,25 @@ public class UserController(IUserService userService) : ControllerBase
         }
         catch (ArgumentException e)
         {
-            return BadRequest(new { Message = e.Message });
+            return BadRequest(new { e.Message });
         }
+    }
+
+    [HttpGet("{id:guid}/verification-photo")]
+    [Authorize(Policy = "Admin")]
+    public async Task<ActionResult> GetVerificationPhoto(Guid id)
+    {
+        var (stream, fileName) = await userService.GetVerificationPhoto(id);
+
+        var provider = new FileExtensionContentTypeProvider();
+
+        if (!provider.TryGetContentType(fileName, out var contentType))
+        {
+            // If the MIME type is not found, default to "application/octet-stream"
+            contentType = "application/octet-stream";
+        }
+
+        return File(stream, contentType, fileName);
     }
 
     [HttpGet("{id:guid}/passport")]

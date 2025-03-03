@@ -1,5 +1,6 @@
 using AspNetCore.Yandex.ObjectStorage;
 using Microsoft.EntityFrameworkCore;
+using Prod.Exceptions;
 using Prod.Models.Database;
 using Prod.Models.Requests;
 using Prod.Models.Responses;
@@ -96,5 +97,19 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         var user = await context.Users.SingleAsync(u => u.Id == id);
         user.VerificationPhoto = new Uri(url);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<(Stream, string)> GetVerificationPhoto(Guid id)
+    {
+        var user = await context.Users.SingleAsync(u => u.Id == id);
+        if (user.VerificationPhoto == null)
+            throw new NotFoundException("Verification photo not found");
+
+        var fileName = user.VerificationPhoto.Segments.Last();
+
+        var res = await objectStoreService.ObjectService.GetAsStreamAsync(fileName);
+        return res.IsSuccess
+            ? (res.Value, fileName)
+            : throw new NotFoundException("Verification photo not found in S3");
     }
 }
