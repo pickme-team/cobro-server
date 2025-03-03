@@ -12,6 +12,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         .Include(b => ((OpenBook)b).OpenZone)
         .Include(b => ((TalkroomBook)b).TalkroomZone)
         .Include(b => ((OfficeBook)b).OfficeSeat)
+        .ThenInclude(s => s.OfficeZone)
         .Include(b => b.User);
 
     public async Task<List<Book>> GetAllActiveBooks() =>
