@@ -37,13 +37,13 @@
         <p>Дата окончания: @_book.End</p>
         <p>Статус: @_book.Status</p>
         <button @onclick="ChangeStatusToActive">Подтвердить</button>
-        
+
         @if (_user.Passport != null)
         {
             <div class="passport-info">
                 <h4>Паспортные данные</h4>
                 <div class="passport-header">
-                    <img src="@_user.AvatarUrl" alt="Avatar" class="passport-avatar" />
+                    <img src="@_user.AvatarUrl" alt="Avatar" class="passport-avatar"/>
                     <div class="passport-details">
                         <p>Фамилия: @_user.Passport.Lastname</p>
                         <p>Имя: @_user.Passport.Firstname</p>
@@ -53,10 +53,6 @@
                 <div class="passport-details">
                     <p>Серия: @_user.Passport.Serial</p>
                     <p>Номер: @_user.Passport.Number</p>
-                    <p>Выдан: @_user.Passport.IssuedBy</p>
-                    <p>Дата выдачи: @_user.Passport.IssuedOn.ToString("dd.MM.yyyy")</p>
-                    <p>Код подразделения: @_user.Passport.CodeOfIssuer</p>
-                    <p>Дата рождения: @_user.Passport.PassportBirthday.ToString("dd.MM.yyyy")</p>
                 </div>
             </div>
         }
@@ -84,7 +80,7 @@
             StateHasChanged();
         }
     }
-    
+
     [JSInvokable]
     public async Task ReturnBarcodeResultsAsync(string qrCode)
     {
@@ -107,6 +103,7 @@
         {
             _errorMessage = $"Ошибка: {ex.Message}";
         }
+
         StateHasChanged();
     }
 
@@ -139,6 +136,7 @@
             {
                 _book.Status = Status.Active;
             }
+
             StateHasChanged();
         }
         catch (ForbiddenException ex)
@@ -146,6 +144,7 @@
             _errorMessage = $"Неверный QR код";
         }
     }
+
 }
 
 <style>

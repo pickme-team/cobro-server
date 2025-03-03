@@ -13,7 +13,7 @@ namespace Prod.Controllers;
 [ApiController]
 [Route("book")]
 [Authorize]
-public class BookController(IBookService bookService) : ControllerBase
+public class BookController(IBookService bookService, IQrCodeService qrCodeService) : ControllerBase
 {
     [HttpPost("{id:guid}")]
     public Task Book(Guid id, [FromQuery(Name = "seat-id")] Guid? seatId, [FromBody] BookRequest req) =>
@@ -75,6 +75,24 @@ public class BookController(IBookService bookService) : ControllerBase
             return isAvailable
                 ? Ok()
                 : StatusCode(StatusCodes.Status409Conflict, "Time not available");
+        }
+        catch (ForbiddenException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+    }
+    
+    [HttpGet("qr")]
+    [Authorize(Policy = "Admin")]
+    public async Task<ActionResult<Book>> Qr([FromQuery] long id)
+    {
+        try
+        {
+            var qr = qrCodeService.Get(id);
+            if (qr == null) return NotFound("QR code not found");
+            var book = await bookService.GetBookById(qr!.Value);
+            if (book == null) return NotFound("Book not found");
+            return Ok(book);
         }
         catch (ForbiddenException ex)
         {

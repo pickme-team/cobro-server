@@ -51,7 +51,7 @@ public class QrCodeService : IQrCodeService
         _db.StringSet(code.ToString(), id.ToString(), TimeSpan.FromSeconds(Ttl));
     }
 
-    private Guid? Get(long id)
+    public Guid? Get(long id)
     {
         var value = _db.StringGet(id.ToString());
         if (!value.HasValue) return null;
