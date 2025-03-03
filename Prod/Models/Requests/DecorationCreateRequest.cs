@@ -16,9 +16,6 @@ public class DecorationCreateRequest : IValidatableObject
 
     public float? Height { get; set; }
 
-    public string? Color { get; set; }
-
-
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (Type == "Icon" && Name == null)
@@ -30,7 +27,5 @@ public class DecorationCreateRequest : IValidatableObject
             yield return new ValidationResult("Width is required for rectangles", [nameof(Width)]);
         if (Height == null)
             yield return new ValidationResult("Height is required for rectangles", [nameof(Height)]);
-        if (Color == null)
-            yield return new ValidationResult("Color is required for rectangles", [nameof(Color)]);
     }
 }
