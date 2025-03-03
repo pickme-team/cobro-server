@@ -16,7 +16,7 @@
 
 @if (_book != null && _user != null)
 {
-    <div>
+    <div class="modal">
         <h4>Информация о бронировании</h4>
         <p>Описание: @_book.Description</p>
         <p>Дата начала: @_book.Start</p>
@@ -29,7 +29,7 @@
             <div class="passport-info">
                 <h4>Паспортные данные</h4>
                 <div class="passport-header">
-                    <img src="@_user.AvatarUrl" alt="Avatar" class="passport-avatar"/>
+                    <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
                     <div class="passport-details">
                         <p>Фамилия: @_user.Passport.Lastname</p>
                         <p>Имя: @_user.Passport.Firstname</p>
