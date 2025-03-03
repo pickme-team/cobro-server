@@ -1,16 +1,27 @@
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using Prod.Models.Database;
+using Prod.Models.Requests;
 
 namespace Prod.Services;
 
 public class RequestService(ProdContext context) : IRequestService
 {
-    public async Task Add(Request request)
+    public async Task<Request> Add(RequestRequest req)
     {
-        request.CreatedAt = DateTime.UtcNow;
+        var entity = new Request
+        {
+            Text = req.Text,
+            ActionId = req.ActionId,
+            Status = req.Status,
+            AdditionalInfo = req.AdditionalInfo,
+            BookId = req.BookId
+        };
 
-        context.Requests.Add(request);
+        context.Requests.Add(entity);
         await context.SaveChangesAsync();
+
+        return entity;
     }
 
     public Task<List<Request>> Today() =>
