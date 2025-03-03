@@ -25,8 +25,7 @@ public class DecorationService(ProdContext context) : IDecorationService
                 X = req.X,
                 Y = req.Y,
                 Width = req.Width!.Value,
-                Height = req.Height!.Value,
-                Color = req.Color!
+                Height = req.Height!.Value
             });
         return context.SaveChangesAsync();
     }

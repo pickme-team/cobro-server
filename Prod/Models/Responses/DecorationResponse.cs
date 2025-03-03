@@ -17,8 +17,6 @@ public class DecorationResponse
 
     public float? Height { get; set; }
 
-    public string? Color { get; set; }
-
     public static DecorationResponse From(Decoration decoration) => new()
     {
         Type = decoration.Type,
@@ -26,7 +24,6 @@ public class DecorationResponse
         Y = decoration.Y,
         Name = (decoration as IconDecoration)?.Name,
         Width = (decoration as RectangleDecoration)?.Width,
-        Height = (decoration as RectangleDecoration)?.Height,
-        Color = (decoration as RectangleDecoration)?.Color
+        Height = (decoration as RectangleDecoration)?.Height
     };
 }
