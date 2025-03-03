@@ -20,13 +20,21 @@
 {
     if (_user.Role is Role.ADMIN or Role.INTERNAL)
     {
-        ChangeStatusToActive().GetAwaiter().GetResult();
-        <div class="modal" style="display: block;">
-            <div class="modal-content">
-                <span class="close" @onclick="CloseModal">&times;</span>
-                <h4>Успех!</h4>
+        if (_user.Role is Role.ADMIN or Role.INTERNAL)
+        {
+            if (!_isChangeStatusCalled)
+            {
+                ChangeStatusToActive().GetAwaiter().GetResult();
+                _isChangeStatusCalled = true;
+            }
+
+            <div class="modal" style="display: block;">
+                <div class="modal-content">
+                    <span class="close" @onclick="CloseModal">&times;</span>
+                    <h4>Успех!</h4>
+                </div>
             </div>
-        </div>
+        }
     }
     else
     {
@@ -94,6 +102,7 @@
                                 </div>
                             </div>
                             <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
+                            <button @onclick="() => _state = QrVerState.TakeNewPhoto" class="confirm-button">Заменить фото</button>
                             <button @onclick="DiscardRequest" class="discard-button">Отклонить</button>
                         }
 
@@ -124,7 +133,7 @@
                             </div>
                             <div>
                                 <label>Дата рождения</label>
-                                <InputText @bind-Value="_passport.Birthday" type="datetime-local" class="form-control"/>
+                                <InputText @bind-Value="_passport.Birthday" type="date" class="form-control"/>
                             </div>
                             <button type="submit" class="btn btn-primary">Подтвердить</button>
                         </EditForm>
@@ -174,6 +183,7 @@
     private QrVerState _state = QrVerState.Start;
     private IBrowserFile? _selectedFile;
     private PassportCreateRequest _passport = new();
+    private bool _isChangeStatusCalled;
 
     private void OnFileChange(InputFileChangeEventArgs e)
     {
@@ -194,7 +204,8 @@
             var fileName = _selectedFile.Name;
             
             await UserService.SetVerificationPhoto(stream, fileName, _user!.Id);
-
+            await ReturnBarcodeResultsAsync(_qrCode!);
+            
             _state = _user!.Passport is null ? QrVerState.InputPassportData : QrVerState.ShowUserPhoto;
             StateHasChanged();
         }
@@ -217,6 +228,7 @@
         _book = null;
         _manualQrCode = new char[10];
         _state = QrVerState.Start;
+        _isChangeStatusCalled = false;
         _passport = new();
         StateHasChanged();
     }
@@ -226,12 +238,13 @@
         if (_state == QrVerState.InputPassportData)
         {
             await UserService.SetPassport(_user!.Id, _passport);
+            await ReturnBarcodeResultsAsync(_qrCode!);
         }
 
         await ChangeStatusToActive();
     }
 
-    public async Task ReturnBarcodeResultsAsync(string qrCode)
+    private async Task ReturnBarcodeResultsAsync(string qrCode)
     {
         try
         {
