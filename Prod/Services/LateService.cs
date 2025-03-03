@@ -3,7 +3,7 @@ using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class LateService(ProdContext context) : BackgroundService
+public class LateService(IServiceProvider services) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -15,11 +15,12 @@ public class LateService(ProdContext context) : BackgroundService
             var waitUntil = curHour.AddMinutes(nextIter);
             await Task.Delay(waitUntil - now, stoppingToken);
 
-            await CancelBooks();
+            using var scope = services.CreateScope();
+            await CancelBooks(scope.ServiceProvider.GetRequiredService<ProdContext>());
         }
     }
 
-    private Task<int> CancelBooks() => context.Books
+    private Task<int> CancelBooks(ProdContext context) => context.Books
         .Where(b => b.Start < DateTime.UtcNow && b.Status == Status.Pending)
         .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, Status.Cancelled));
 }
