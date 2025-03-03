@@ -3,7 +3,7 @@ using Action = Prod.Models.Database.Action;
 
 namespace Prod.Services;
 
-public class ActionService(ProdContext prodContext)
+public class ActionService(ProdContext prodContext) : IActionService
 {
     public async Task<Action> Create(Action action)
     {
@@ -11,24 +11,24 @@ public class ActionService(ProdContext prodContext)
         await prodContext.SaveChangesAsync();
         return action;
     }
-    
+
     public async Task<Action> Update(Action action)
     {
         prodContext.Actions.Update(action);
         await prodContext.SaveChangesAsync();
         return action;
     }
-    
+
     public async Task<Action> Delete(Action action)
     {
         prodContext.Actions.Remove(action);
         await prodContext.SaveChangesAsync();
         return action;
     }
-    
+
     public async Task<List<Action>> AllActions() =>
         await prodContext.Actions.ToListAsync();
-    
-    public async Task<Action?> Get(Guid id) =>
+
+    public async Task<Action?> Get(long id) =>
         await prodContext.Actions.FindAsync(id);
 }
