@@ -16,36 +16,110 @@
 
 @if (_book != null && _user != null)
 {
-    <div class="modal" style="display: block;">
-        <div class="modal-content">
-            <span class="close" @onclick="CloseModal">&times;</span>
-            <h4>Информация о бронировании</h4>
-            <p>Описание: @_book.Description</p>
-            <p>Дата начала: @_book.Start</p>
-            <p>Дата окончания: @_book.End</p>
-            <p>Статус: @_book.Status</p>
-            <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
+    if (_user.Role is Role.ADMIN or Role.INTERNAL)
+    {
+        ChangeStatusToActive().GetAwaiter().GetResult();
+        <div class="modal" style="display: block;">
+            <div class="modal-content">
+                <span class="close" @onclick="CloseModal">&times;</span>
+                <h4>Успех!</h4>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="modal" style="display: block;">
+            <div class="modal-content">
+                <span class="close" @onclick="CloseModal">&times;</span>
+                <h4>Информация о бронировании</h4>
+                <p>Тип: @GetGroupName(_book.GetType().Name)</p>
+                <p>Описание: @_book.Description</p>
+                <p>Дата начала: @_book.Start</p>
+                <p>Дата окончания: @_book.End</p>
+                <p>Статус: @_book.Status</p>
+                
+                @switch (_state)
+                {
+                    case QrVerState.ShowUserPhoto:
+                        if (_user.VerificationPhoto is null)
+                        {
+                            _state = QrVerState.TakeNewPhoto;
+                            StateHasChanged();
+                        }
+                        else
+                        {
+                            <div class="passport-info">
+                                <h4>Паспортные данные</h4>
+                                <div class="passport-header">
+                                    <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
+                                    <div class="passport-details">
+                                        <p>Фамилия: ***</p>
+                                        <p>Имя: ***</p>
+                                        <p>Отчество: ***</p>
+                                    </div>
+                                </div>
+                                <div class="passport-details">
+                                    <p>Серия: ***</p>
+                                    <p>Номер: ***</p>
+                                </div>
+                            </div>
+                            <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
+                            <button @onclick="DiscardRequest" class="discard-button">Отклонить</button>
+                        }
 
-            @if (_user.Passport != null)
-            {
-                <div class="passport-info">
-                    <h4>Паспортные данные</h4>
-                    <div class="passport-header">
-                        <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
+                        break;
+                    case QrVerState.ShowUserPassportData:
+                        if (_user.Passport is null)
+                        {
+                            _state = QrVerState.InputPassportData;
+                            StateHasChanged();
+                        }
+                        else
+                        {
+                            <div class="passport-info">
+                                <h4>Паспортные данные</h4>
+                                <div class="passport-header">
+                                    <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
+                                    <div class="passport-details">
+                                        <p>Фамилия: @_user.Passport.Lastname</p>
+                                        <p>Имя: @_user.Passport.Firstname</p>
+                                        <p>Отчество: @_user.Passport.Middlename</p>
+                                    </div>
+                                </div>
+                                <div class="passport-details">
+                                    <p>Серия: @_user.Passport.Serial</p>
+                                    <p>Номер: @_user.Passport.Number</p>
+                                </div>
+                            </div>
+                            <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
+                            <button @onclick="DiscardRequest" class="discard-button">Отклонить</button>
+                        }
+                        break;
+                }
+
+                @if (_user.Passport != null)
+                {
+                    <div class="passport-info">
+                        <h4>Паспортные данные</h4>
+                        <div class="passport-header">
+                            <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
+                            <div class="passport-details">
+                                <p>Фамилия: @_user.Passport.Lastname</p>
+                                <p>Имя: @_user.Passport.Firstname</p>
+                                <p>Отчество: @_user.Passport.Middlename</p>
+                            </div>
+                        </div>
                         <div class="passport-details">
-                            <p>Фамилия: @_user.Passport.Lastname</p>
-                            <p>Имя: @_user.Passport.Firstname</p>
-                            <p>Отчество: @_user.Passport.Middlename</p>
+                            <p>Серия: @_user.Passport.Serial</p>
+                            <p>Номер: @_user.Passport.Number</p>
                         </div>
                     </div>
-                    <div class="passport-details">
-                        <p>Серия: @_user.Passport.Serial</p>
-                        <p>Номер: @_user.Passport.Number</p>
-                    </div>
-                </div>
-            }
+                }
+
+                <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
+            </div>
         </div>
-    </div>
+    }
 }
 
 <div class="manual-input">
@@ -62,16 +136,37 @@
 </div>
 
 @code {
+
+    enum QrVerState
+    {
+        Start,
+        ShowUserPhoto,
+        ShowUserPassportData,
+        TakeNewPhoto,
+        InputPassportData,
+    }
+    
     private Book? _book;
     private User? _user;
     private string? _errorMessage;
     private char[] _manualQrCode = new char[10];
     private string? _qrCode;
+    private QrVerState _state = QrVerState.Start;
+    
+    private string GetGroupName(string typeName) => typeName switch
+    {
+        nameof(OpenBook) => "Опенспейс",
+        nameof(OfficeBook) => "Места в офисе",
+        nameof(TalkroomBook) => "Комнаты",
+        _ => "Остальное"
+    };
     
     private void CloseModal()
     {
         _book = null;
         _manualQrCode = new char[10];
+        _state = QrVerState.Start;
+        StateHasChanged();
     }
 
     public async Task ReturnBarcodeResultsAsync(string qrCode)
@@ -88,6 +183,7 @@
             {
                 _book = await BookService.GetBookById(id.Value);
                 _user = _book?.User;
+                _state = QrVerState.ShowUserPhoto;
                 await JsRuntime.InvokeVoidAsync("logToConsole", $"Success User ID: {_user?.Id.ToString()}", "info");
                 if (_book is null)
                     throw new Exception("Бронирование уже не существует");
@@ -137,6 +233,21 @@
         {
             _errorMessage = $"Неверный QR код";
         }
+    }
+
+    private void DiscardRequest()
+    {
+        switch (_state)
+        {
+            case QrVerState.ShowUserPhoto:
+                _state = QrVerState.ShowUserPassportData;
+                break;
+            case QrVerState.ShowUserPassportData:
+                CloseModal();
+                break;
+        }
+        
+        StateHasChanged();
     }
 }
 
@@ -201,6 +312,18 @@
         padding: 10px 20px;
         font-size: 16px;
         background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .discard-button {
+        display: block;
+        margin: 0 auto;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #e00909;
         color: white;
         border: none;
         border-radius: 5px;
