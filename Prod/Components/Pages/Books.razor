@@ -53,6 +53,7 @@
         var book = _books.FirstOrDefault(b => b.Id == bookId)!;
         _selectedUser = book.User;
         _showModal = true;
+        StateHasChanged();
     }
 
     private void CloseModal()
@@ -102,6 +103,7 @@
                 StateHasChanged();
             }
             CloseModal();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -115,7 +117,17 @@
             (string.IsNullOrEmpty(userNameFilter) || b.User.Name.Contains(userNameFilter, StringComparison.OrdinalIgnoreCase)) &&
             (!startDateFilter.HasValue || b.Start >= startDateFilter.Value.ToUniversalTime()) &&
             (!endDateFilter.HasValue || b.End <= endDateFilter.Value.ToUniversalTime())).ToList();
+        StateHasChanged();
     }
+    
+    private string GetGroupName(string typeName) => typeName switch
+    {
+        nameof(OpenBook) => "Опенспейс",
+        nameof(OfficeBook) => "Места в офисе",
+        nameof(TalkroomBook) => "Комнаты",
+        _ => "Остальное"
+    };
+
 }
 
 @if (!string.IsNullOrEmpty(_errorMessage))
@@ -125,12 +137,13 @@
 
 @foreach (var group in _filteredBooks.GroupBy(b => b.GetType().Name))
 {
-    <h4>@group.Key</h4>
+    <h4>@GetGroupName(group.Key)</h4>
     <ul>
         @foreach (var book in group)
         {
             <li>
-                <p>Бронирование: @book.Description</p>
+                <p>Бронирование #@book.Id: @book.Description</p>
+                <p>Статус: @book.Status</p>
                 <p>Дата начала: @book.Start.ToUniversalTime()</p>
                 <p>Дата окончания: @book.End.ToUniversalTime()</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
