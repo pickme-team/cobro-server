@@ -3,7 +3,7 @@ using Prod.Models.Database;
 
 namespace Prod.Services;
 
-public class LateService(IServiceProvider services) : BackgroundService
+public class LateService(IServiceProvider services, ILogger<LateService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -15,12 +15,20 @@ public class LateService(IServiceProvider services) : BackgroundService
             var waitUntil = curHour.AddMinutes(nextIter);
             await Task.Delay(waitUntil - now, stoppingToken);
 
+            logger.LogInformation("Marking bookings as cancelled/ended.");
+
             using var scope = services.CreateScope();
-            await CancelBooks(scope.ServiceProvider.GetRequiredService<ProdContext>());
+            var context = scope.ServiceProvider.GetRequiredService<ProdContext>();
+            await CancelBooks(context);
+            await EndBooks(context);
         }
     }
 
-    private Task<int> CancelBooks(ProdContext context) => context.Books
+    private static Task<int> CancelBooks(ProdContext context) => context.Books
         .Where(b => b.Start < DateTime.UtcNow && b.Status == Status.Pending)
         .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, Status.Cancelled));
+
+    private static Task<int> EndBooks(ProdContext context) => context.Books
+        .Where(b => b.End < DateTime.UtcNow && (b.Status == Status.Pending || b.Status == Status.Active))
+        .ExecuteUpdateAsync(s => s.SetProperty(b => b.Status, Status.Ended));
 }
