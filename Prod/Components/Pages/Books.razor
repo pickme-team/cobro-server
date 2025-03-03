@@ -204,18 +204,21 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: 50%;
-        height: 50%;
+        width: 100%;
+        height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         display: block;
     }
 
     .modal-content {
         background-color: #fff;
-        margin: 15% auto;
+        margin: 10% auto;
         padding: 20px;
         border: 1px solid #888;
-        width: 80%;
+        width: 60%;
+        max-width: 500px;
+        max-height: 70%;
+        overflow: auto;
     }
 
     .close {
