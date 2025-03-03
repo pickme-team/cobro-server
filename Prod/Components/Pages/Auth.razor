@@ -10,7 +10,6 @@
 
 @code {
     private readonly SignInRequest _signInRequest = new SignInRequest();
-    private readonly SignUpRequest _signUpRequest = new SignUpRequest();
     private string? _errorMessage;
 
     private async Task HandleSignIn()
@@ -23,6 +22,7 @@
             var user = JwtService.GetUserFromToken(response.Token);
             await LocalStorage.SetItemAsync("adminId", user.Id.ToString());
             Navigation.NavigateTo("/");
+            StateHasChanged();
         }
         catch (UnauthorizedException)
         {
