@@ -9,10 +9,17 @@
 
 <h3>Сканировать QR</h3>
 
-<div>
-    <video id="video" width="300" height="200"></video>
-    <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
-    <button @onclick="StartScanning">Начать сканирование</button>
+<div class="select">
+    <button @onclick="GetCameras">Get Cameras</button>
+    <label for="videoSource"></label>
+    <select id="@videoSourceId"></select>
+    <button @onclick="StartCamera">Open Camera</button>
+    <button @onclick="StopCamera">Stop Camera</button>
+</div>
+
+<div id="videoview">
+    <div class="dce-video-container" id="@videoContainerId"></div>
+    <canvas id="@overlayId"></canvas>
 </div>
 
 @if (!string.IsNullOrEmpty(_errorMessage))
@@ -36,6 +43,50 @@
     private Book? _book;
     private string? _errorMessage;
     private string? _qrCode;
+    private String result = "";
+    private DotNetObjectReference<ScanQR>? objRef;
+    private string videoSourceId = "videoSource";
+    private string overlayId = "overlay";
+    private string videoContainerId = "videoContainer";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // await JsRuntime.InvokeAsync<Boolean>("jsFunctions.setLicense", Environment.GetEnvironmentVariable("QR_LICENSE"));
+            await JsRuntime.InvokeAsync<Boolean>("jsFunctions.setLicense", "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAzNzUzNTE3LVRYbFFjbTlxIiwibWFpblNlcnZlclVSTCI6Imh0dHBzOi8vbWRscy5keW5hbXNvZnRvbmxpbmUuY29tIiwib3JnYW5pemF0aW9uSUQiOiIxMDM3NTM1MTciLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJjaGVja0NvZGUiOjkzMDAyMTQ0MX0=");
+            objRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeAsync<Boolean>("jsFunctions.initScanner", objRef, videoContainerId, videoSourceId, overlayId);
+            StateHasChanged();
+        }
+    }
+    
+    [JSInvokable]
+    public void ReturnBarcodeResultsAsync(String text)
+    {
+        result = text;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
+    }
+
+    public async Task GetCameras()
+    {
+        await JsRuntime.InvokeVoidAsync("jsFunctions.getCameras");
+    }
+
+    public async Task StartCamera()
+    {
+        await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera");
+    }
+
+    public async Task StopCamera()
+    {
+        await JsRuntime.InvokeVoidAsync("jsFunctions.stopCamera");
+    }
 
     private async Task StartScanning()
     {
@@ -90,3 +141,6 @@
         }
     }
 }
+
+<script src="https://cdn.jsdelivr.net/npm/dynamsoft-capture-vision-bundle"></script>
+<script src="js/jsInterop.js"></script>
