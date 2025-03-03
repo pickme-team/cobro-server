@@ -26,9 +26,9 @@ public class ActionService(ProdContext prodContext) : IActionService
         return action;
     }
 
-    public async Task<List<Action>> AllActions() =>
-        await prodContext.Actions.ToListAsync();
+    public Task<List<Action>> AllActions() =>
+        prodContext.Actions.ToListAsync();
 
-    public async Task<Action?> Get(long id) =>
-        await prodContext.Actions.FindAsync(id);
+    public Task<Action> Get(long id) =>
+        prodContext.Actions.SingleAsync(a => a.Id == id);
 }
