@@ -11,6 +11,4 @@ public class Action
     public string Description { get; set; } = null!;
     public bool AdditionalInfo { get; set; }
     public string Color { get; set; } = null!;
-
-    public List<Request> Requests { get; set; } = [];
 }
