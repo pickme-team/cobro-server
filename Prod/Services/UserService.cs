@@ -23,8 +23,7 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
 
     public async Task<User> Get(Guid id) =>
         await UserQuery().SingleAsync(u => u.Id == id);
-
-
+    
     public async Task<UserResponse> UserByEmail(string email) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Email == email));
 

@@ -55,7 +55,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
     }
 
     public async Task<Book?> GetBookById(Guid bookId) =>
-        await context.Books.FindAsync(bookId);
+        await context.Books.Include(b => b.User).SingleAsync(b => b.Id == bookId);
 
     public async Task Book(Guid zoneId, Guid? seatId, Guid userId, BookRequest bookRequest)
     {
