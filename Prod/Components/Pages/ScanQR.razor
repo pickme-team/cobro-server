@@ -13,7 +13,12 @@
 <div class="select">
     <button @onclick="GetCameras">Get Cameras</button>
     <label for="videoSource"></label>
-    <select id="@videoSourceId"></select>
+    <select id="@videoSourceId" @onchange="OnCameraSelected">
+        @foreach (var camera in _cameras)
+        {
+            <option value="@camera.deviceId">@camera.label</option>
+        }
+    </select>
     <button @onclick="StartCamera">Open Camera</button>
     <button @onclick="StopCamera">Stop Camera</button>
 </div>
@@ -58,21 +63,30 @@
 }
 
 @code {
+    public class MediaDeviceInfo
+    {
+        public string deviceId { get; set; }
+        public string label { get; set; }
+    }
+    
     private Book? _book;
     private User? _user;
     private string? _errorMessage;
     private string? _qrCode;
     private string videoSourceId = "videoSource";
     private Timer? _timer;
+    private List<MediaDeviceInfo> _cameras = new List<MediaDeviceInfo>();
+    private string? _selectedCameraId;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            await GetCameras();
             StateHasChanged();
         }
     }
-
+    
     public async Task ReturnBarcodeResultsAsync(string qrCode)
     {
         try
@@ -98,16 +112,23 @@
         StateHasChanged();
     }
 
+
     public async Task GetCameras()
     {
-        // Реализуйте получение списка камер
+        _cameras = await JsRuntime.InvokeAsync<List<MediaDeviceInfo>>("jsFunctions.getCameras");
+        StateHasChanged();
+    }
+
+    public async Task OnCameraSelected(ChangeEventArgs e)
+    {
+        _selectedCameraId = e.Value?.ToString();
     }
 
     public async Task StartCamera()
     {
         try
         {
-            await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera", "videoElement");
+            await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera", "videoElement", _selectedCameraId);
             _timer = new Timer((_) => CaptureAndScanFrame().ConfigureAwait(false), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
         }
         catch (TaskCanceledException)
@@ -119,7 +140,6 @@
         }
     }
 
-
     public async Task StopCamera()
     {
         await JsRuntime.InvokeVoidAsync("jsFunctions.stopCamera", "videoElement");
@@ -130,16 +150,11 @@
     {
         try
         {
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
+            var frameData = await JsRuntime.InvokeAsync<byte[]>("jsFunctions.captureFrame");
+            string? result = await QrService.ScanQrCode(frameData);
+            if (!string.IsNullOrEmpty(result))
             {
-                string dataUrl = await JsRuntime.InvokeAsync<string>("jsFunctions.captureFrame", cts.Token, "videoElement", "canvasElement");
-                byte[] imageBytes = Convert.FromBase64String(dataUrl.Split(',')[1]);
-            
-                string? result = await QrService.ScanQrCode(imageBytes);
-                if (!string.IsNullOrEmpty(result))
-                {
-                    await ReturnBarcodeResultsAsync(result);
-                }
+                await ReturnBarcodeResultsAsync(result);
             }
         }
         catch (TaskCanceledException)

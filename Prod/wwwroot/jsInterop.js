@@ -1,44 +1,46 @@
+let currentStream = null; // Храним текущий поток
+
 window.jsFunctions = {
-    startCamera: async function (videoElementId) {
-        const video = document.getElementById(videoElementId);
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                video.play();
-            } catch (error) {
-                console.error("Error accessing camera: ", error);
-            }
-        } else {
-            console.error("MediaDevices API is not supported");
+    getCameras: async function () {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        return videoDevices;
+    },
+
+    startCamera: async function (videoElementId, deviceId = null) {
+        const videoElement = document.getElementById(videoElementId);
+        const constraints = {
+            video: deviceId ? { deviceId: { exact: deviceId } } : true
+        };
+
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
         }
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoElement.srcObject = stream;
+        await videoElement.play();
+        currentStream = stream;
     },
 
     stopCamera: function (videoElementId) {
-        const video = document.getElementById(videoElementId);
-        const stream = video.srcObject;
-        const tracks = stream.getTracks();
-
-        tracks.forEach(function (track) {
-            track.stop();
-        });
-
-        video.srcObject = null;
+        const videoElement = document.getElementById(videoElementId);
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+        }
+        videoElement.srcObject = null;
     },
 
-    captureFrame: function (videoElementId, canvasElementId) {
-        const video = document.getElementById(videoElementId);
-        const canvas = document.getElementById(canvasElementId);
-        const context = canvas.getContext('2d');
-
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            return canvas.toDataURL('image/png');
-        } else {
-            console.error("Video is not ready");
-            return null;
+    captureFrame: async function () {
+        if (!currentStream) {
+            throw new Error("Camera stream is not available.");
         }
+
+        const track = currentStream.getVideoTracks()[0];
+        const imageCapture = new ImageCapture(track);
+        const blob = await imageCapture.takePhoto();
+        const arrayBuffer = await blob.arrayBuffer();
+        return Array.from(new Uint8Array(arrayBuffer));
     }
 };

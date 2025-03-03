@@ -1,5 +1,4 @@
 using System.Drawing;
-using IronBarCode;
 using StackExchange.Redis;
 
 namespace Prod.Services;
@@ -65,12 +64,7 @@ public class QrCodeService : IQrCodeService
     {
         try
         {
-            using (var ms = new MemoryStream(imageBytes))
-            {
-                var barcodeResult = await BarcodeReader.ReadAsync(ms);
-
-                return barcodeResult?.Values()[0];
-            }
+            return "hola";
         }
         catch
         {
