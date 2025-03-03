@@ -3,10 +3,15 @@ using Prod.Exceptions;
 using Prod.Models.Database;
 using Prod.Models.Requests;
 using Prod.Models.Responses;
+using Serilog;
 
 namespace Prod.Services;
 
-public class BookService(ProdContext context, IQrCodeService qrCodeService, IUserService userService, IEmailService emailService) : IBookService
+public class BookService(
+    ProdContext context,
+    IQrCodeService qrCodeService,
+    IUserService userService,
+    IEmailService emailService) : IBookService
 {
     private IQueryable<Book> BooksQuery => context.Books
         .Include(b => ((OpenBook)b).OpenZone)
@@ -75,7 +80,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             default:
                 throw new ForbiddenException("Not a bookable zone");
         }
-        
+
         string messageTemplate = @"
 <!DOCTYPE html>
 <html lang=""ru"">
@@ -172,12 +177,14 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 </html>
 ";
 
-    var message = messageTemplate
-        .Replace("{{date}}", bookRequest.From.AddHours(3).ToString("d"))
-        .Replace("{{time}}", bookRequest.From.AddHours(3).ToString("t"))
-        .Replace("{{time2}}", bookRequest.To.AddHours(3).ToString("t"))
-        .Replace("{{coworkingName}}", zone.Name);
-        await emailService.SendEmailAsync(userService.UserById(userId).Result.Email, "Бронирование коворкинго успешно!", message);
+        var message = messageTemplate
+            .Replace("{{date}}", bookRequest.From.AddHours(3).ToString("d"))
+            .Replace("{{time}}", bookRequest.From.AddHours(3).ToString("t"))
+            .Replace("{{time2}}", bookRequest.To.AddHours(3).ToString("t"))
+            .Replace("{{coworkingName}}", zone.Name);
+        await emailService.SendEmailAsync(userService.UserById(userId).Result.Email,
+            "Бронирование коворкинго успешно!",
+            message);
     }
 
     private async Task BookOfficeSeat(OfficeZone zone, Guid seatId, Guid userId, BookRequest req)

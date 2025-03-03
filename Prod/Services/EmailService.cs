@@ -1,5 +1,6 @@
 using MailKit.Net.Smtp;
 using MimeKit;
+using Serilog;
 
 namespace Prod.Services;
 
@@ -22,12 +23,19 @@ public class EmailService : IEmailService
             Text = message
         };
 
-        using (var client = new SmtpClient())
+        try
         {
-            await client.ConnectAsync("smtp.mail.selcloud.ru", 1127, true);
-            await client.AuthenticateAsync("3221", "1y6SAoKlw9m0aBcjJY");
-            await client.SendAsync(emailMessage);
-            await client.DisconnectAsync(true);
+            using (var client = new SmtpClient())
+            {
+                await client.ConnectAsync("smtp.mail.selcloud.ru", 1127, true);
+                await client.AuthenticateAsync("3221", "1y6SAoKlw9m0aBcjJY");
+                await client.SendAsync(emailMessage);
+                await client.DisconnectAsync(true);
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Error("мобильщики идиоты, кинули фигня почту : " + e);
         }
     }
 }
