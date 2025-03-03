@@ -98,33 +98,32 @@
 
                         break;
                     case QrVerState.InputPassportData:
-                        var passport = new PassportCreateRequest();
-                        <EditForm Model="@passport" OnValidSubmit="() => SetNewPassportData(passport)" style="display: block;" FormName="SignInForm">
+                        <EditForm Model="@_passport" OnValidSubmit="SetNewPassportData" style="display: block;" FormName="PassportForm">
                             <DataAnnotationsValidator/>
                             <ValidationSummary/>
                             <div>
                                 <label>Серия</label>
-                                <InputText @bind-Value="passport.Serial" class="form-control"/>
+                                <InputText @bind-Value="_passport.Serial" class="form-control"/>
                             </div>
                             <div>
                                 <label>Номер</label>
-                                <InputText @bind-Value="passport.Number" class="form-control"/>
+                                <InputText @bind-Value="_passport.Number" class="form-control"/>
                             </div>
                             <div>
                                 <label>Имя</label>
-                                <InputText @bind-Value="passport.Firstname" class="form-control"/>
+                                <InputText @bind-Value="_passport.Firstname" class="form-control"/>
                             </div>
                             <div>
                                 <label>Фамилия</label>
-                                <InputText @bind-Value="passport.Lastname" class="form-control"/>
+                                <InputText @bind-Value="_passport.Lastname" class="form-control"/>
                             </div>
                             <div>
                                 <label>Отчество</label>
-                                <InputText @bind-Value="passport.Middlename" class="form-control"/>
+                                <InputText @bind-Value="_passport.Middlename" class="form-control"/>
                             </div>
                             <div>
                                 <label>Дата рождения</label>
-                                <InputText @bind-Value="passport.Birthday" type="datetime-local" class="form-control"/>
+                                <InputText @bind-Value="_passport.Birthday" type="datetime-local" class="form-control"/>
                             </div>
                             <button type="submit" class="btn btn-primary">Подтвердить</button>
                         </EditForm>
@@ -173,6 +172,7 @@
     private string? _qrCode;
     private QrVerState _state = QrVerState.Start;
     private IBrowserFile? _selectedFile;
+    private PassportCreateRequest _passport = new();
 
     private void OnFileChange(InputFileChangeEventArgs e)
     {
@@ -216,14 +216,15 @@
         _book = null;
         _manualQrCode = new char[10];
         _state = QrVerState.Start;
+        _passport = new();
         StateHasChanged();
     }
 
-    private async Task SetNewPassportData(PassportCreateRequest request)
+    private async Task SetNewPassportData()
     {
         if (_state == QrVerState.InputPassportData)
         {
-            await UserService.SetPassport(_user!.Id, request);
+            await UserService.SetPassport(_user!.Id, _passport);
         }
 
         await ChangeStatusToActive();
