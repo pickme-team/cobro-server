@@ -56,19 +56,19 @@ public class UserController(IUserService userService) : ControllerBase
         }
     }
 
-    [HttpPost("passport")]
-    public async Task<ActionResult> SetPassport([FromForm] Passport passport)
+    [HttpPost("{id:guid}/passport")]
+    public async Task<ActionResult> SetPassport([FromForm] Passport passport, Guid id)
     {
         await userService.SetPassport(User.Id(), passport);
         return Ok();
     }
 
-    [HttpPost("verification-photo")]
-    public async Task<ActionResult> SetVerificationPhoto(IFormFile file)
+    [HttpPost("{id:guid}/verification-photo")]
+    public async Task<ActionResult> SetVerificationPhoto([FromBody] IFormFile file, Guid id)
     {
         try
         {
-            await userService.SetVerificationPhoto(file, User.Id());
+            await userService.SetVerificationPhoto(file, id);
             return Ok();
         }
         catch (ArgumentException e)
@@ -77,10 +77,10 @@ public class UserController(IUserService userService) : ControllerBase
         }
     }
 
-    [HttpGet("passport")]
-    public async Task<ActionResult<Passport>> GetPassport()
+    [HttpGet("{id:guid}/passport")]
+    public async Task<ActionResult<Passport>> GetPassport(Guid id)
     {
-        User user = await userService.Get(User.Id());
+        User user = await userService.Get(id);
         return Ok(user.Passport);
     }
 
