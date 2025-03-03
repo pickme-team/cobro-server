@@ -75,7 +75,7 @@ public class UserController(IUserService userService) : ControllerBase
 
     [HttpPost("{id:guid}/verification-photo")]
     [Authorize(Policy = "Admin")]
-    public async Task<ActionResult> SetVerificationPhoto([FromForm] IFormFile file, Guid id)
+    public async Task<ActionResult> SetVerificationPhoto(IFormFile file, Guid id)
     {
         try
         {
