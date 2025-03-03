@@ -220,8 +220,14 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     public async Task<QrResponse> Qr(Guid bookId, Guid userId)
     {
-        Tuple<long?, int?> t = qrCodeService.GetByValue(bookId);
-        if (t.Item1 != null) return new QrResponse { Code = t.Item1!.ToString(), Ttl = t.Item2!.Value };
+        var (c, ttl) = qrCodeService.GetByValue(bookId);
+        if (c != null)
+            return new QrResponse
+            {
+                Code = c.Value.ToString(),
+                Ttl = ttl!.Value
+            };
+
         var book = await context.Books.SingleAsync(b => b.Id == bookId);
         if (book.UserId != userId)
             throw new ForbiddenException("You did not book this");
@@ -238,13 +244,23 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         };
     }
 
-    public async Task<List<Book>> ActiveBooks(Guid id) =>
-        await context.Books
+    public Task<List<Book>> ActiveBooks(Guid id) =>
+        context.Books
             .Include(b => ((OpenBook)b).OpenZone)
             .Include(b => ((TalkroomBook)b).TalkroomZone)
             .Include(b => ((OfficeBook)b).OfficeSeat)
             .Where(b => b.UserId == id && b.Status == Status.Active)
             .ToListAsync();
+
+    public async Task<List<BookWithUserResponse>> ActiveBooks() =>
+        (await context.Books
+            .Include(b => ((OpenBook)b).OpenZone)
+            .Include(b => ((TalkroomBook)b).TalkroomZone)
+            .Include(b => ((OfficeBook)b).OfficeSeat)
+            .Include(b => b.User)
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
+            .ToListAsync())
+        .Select(BookWithUserResponse.From).ToList();
 
     public async Task<List<Book>> UserHistory(Guid id) =>
         await context.Books
@@ -312,7 +328,6 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             .Include(b => ((OpenBook)b).OpenZone)
             .Include(b => ((TalkroomBook)b).TalkroomZone)
             .Include(b => ((OfficeBook)b).OfficeSeat)
-            .ThenInclude(s => s.OfficeZone)
             .Include(b => b.User)
             .ToListAsync();
 
@@ -322,6 +337,65 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         }
 
         return entities.Select(BookWithUserResponse.From).ToList();
+    }
+
+    public async Task<List<BookResponse>> MassBook(Guid zoneId, DateOnly from, DateOnly to, TimeOnly fromTime,
+        TimeOnly toTime, string description, Guid userId)
+    {
+        var bookResponses = new List<BookResponse>();
+
+        for (var date = from; date <= to; date = date.AddDays(1))
+        {
+            var startDateTime = date.ToDateTime(fromTime);
+            var endDateTime = date.ToDateTime(toTime);
+
+            var bookRequest = new BookRequest
+            {
+                From = startDateTime,
+                To = endDateTime,
+                Description = description
+            };
+
+            Guid? seatId = null;
+            var zone = await context.Zones.FindAsync(zoneId) ?? throw new NotFoundException("Zone not found");
+
+            switch (zone)
+            {
+                case OfficeZone officeZone:
+                    var seat = await GetAvailableSeat(officeZone, startDateTime, endDateTime);
+                    if (seat == null)
+                        throw new ForbiddenException("No seats available for the specified date range.");
+                    seatId = seat.Id;
+                    break;
+
+                case TalkroomZone talkroomZone:
+                    if (!await IsTalkroomZoneAvailable(talkroomZone, startDateTime, endDateTime))
+                        throw new ForbiddenException("Talkroom is not available for the specified date range.");
+                    break;
+
+                case OpenZone openZone:
+                    if (!await IsOpenZoneAvailable(openZone, startDateTime, endDateTime))
+                        throw new ForbiddenException("Open zone is not available for the specified date range.");
+
+                    break;
+
+                default:
+                    throw new BadHttpRequestException("Zone type not supported.");
+            }
+
+            // Бронируем место
+            await Book(zoneId, seatId, userId, bookRequest);
+
+            // Получаем созданную запись из таблицы Books
+            var book = await GetCreatedBook(zone, userId, startDateTime, endDateTime, seatId);
+
+            if (book != null)
+                bookResponses.Add(BookResponse.From(book));
+            else
+                throw new Exception("Failed to retrieve the newly created book.");
+        }
+
+        return bookResponses;
     }
 
     private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to, Guid userId, Guid seatId)
@@ -334,11 +408,11 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         var user = await userService.UserById(userId);
         if (!zone.IsPublic && user.Role == Role.CLIENT)
             return false;
-        
+
         var seat = await context.OfficeSeats
             .Include(s => s.Books)
             .FirstAsync(s => s.Id == seatId && s.OfficeZoneId == zone.Id);
-        
+
         if (seat == null)
             throw new ArgumentException("Seat not found in the specified zone", nameof(seatId));
 
@@ -389,5 +463,88 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         }
 
         return true;
+    }
+
+    private async Task<bool> IsTalkroomZoneAvailable(TalkroomZone zone, DateTime from, DateTime to) =>
+        !await context.Books
+            .OfType<TalkroomBook>()
+            .AnyAsync(b =>
+                b.TalkroomZoneId == zone.Id &&
+                (b.Status == Status.Active || b.Status == Status.Pending) &&
+                b.Start < to.ToUniversalTime() && from.ToUniversalTime() < b.End);
+
+    private async Task<bool> IsOpenZoneAvailable(OpenZone zone, DateTime from, DateTime to)
+    {
+        var books = await context.Books
+            .OfType<OpenBook>()
+            .Where(b => b.OpenZoneId == zone.Id && (b.Status == Status.Active || b.Status == Status.Pending))
+            .ToListAsync();
+
+        var events = books
+            .SelectMany(b => new List<(DateTime Time, bool IsStart)>
+            {
+                (b.Start.ToUniversalTime(), true),
+                (b.End.ToUniversalTime(), false)
+            })
+            .OrderBy(e => e.Time);
+
+        var overlapCount = 0;
+
+        foreach (var (time, isStart) in events)
+        {
+            if (isStart)
+            {
+                overlapCount++;
+                if (overlapCount > zone.Capacity && time >= from.ToUniversalTime() && time <= to.ToUniversalTime())
+                    return false;
+            }
+            else
+            {
+                overlapCount--;
+            }
+        }
+
+        return true;
+    }
+
+    private async Task<Book?> GetCreatedBook(Zone zone, Guid userId, DateTime startDateTime, DateTime endDateTime,
+        Guid? seatId) =>
+        zone switch
+        {
+            OfficeZone => await context.Books.OfType<OfficeBook>()
+                .FirstOrDefaultAsync(b =>
+                    b.OfficeSeatId == seatId && b.UserId == userId && b.Start == startDateTime.ToUniversalTime() &&
+                    b.End == endDateTime.ToUniversalTime()),
+            TalkroomZone => await context.Books.OfType<TalkroomBook>()
+                .FirstOrDefaultAsync(b =>
+                    b.TalkroomZoneId == zone.Id && b.UserId == userId && b.Start == startDateTime.ToUniversalTime() &&
+                    b.End == endDateTime.ToUniversalTime()),
+            OpenZone => await context.Books.OfType<OpenBook>()
+                .FirstOrDefaultAsync(b =>
+                    b.OpenZoneId == zone.Id && b.UserId == userId && b.Start == startDateTime.ToUniversalTime() &&
+                    b.End == endDateTime.ToUniversalTime()),
+            _ => null
+        };
+
+    private Task<OfficeSeat?> GetAvailableSeat(OfficeZone officeZone, DateTime start, DateTime end) =>
+        context.Entry(officeZone)
+            .Collection(oz => oz.Seats)
+            .Query()
+            .Include(s => s.Books)
+            .FirstOrDefaultAsync(seat => !seat.Books.Any(b =>
+                (b.Status == Status.Active || b.Status == Status.Pending)
+                && b.Start < end.ToUniversalTime() && start.ToUniversalTime() < b.End));
+
+    public async Task<Book> GetBookByQr(long id)
+    {
+        var qr = qrCodeService[id];
+        if (qr == null)
+            throw new NotFoundException("QR code not found");
+
+        var book = await GetBookById(qr.Value);
+        if (book == null)
+            throw new NotFoundException("Book not found");
+
+        return book;
     }
 }
