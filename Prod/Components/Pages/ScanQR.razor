@@ -5,6 +5,7 @@
 @inject IBookService BookService
 @inject IJSRuntime JsRuntime
 @inject IQrCodeService QrService
+@inject IUserService UserService
 @rendermode InteractiveServer
 
 <h3>Сканировать QR</h3>
@@ -27,7 +28,7 @@
     <div class="alert alert-danger">@_errorMessage</div>
 }
 
-@if (_book != null)
+@if (_book != null && _user != null)
 {
     <div>
         <h4>Информация о бронировании</h4>
@@ -35,12 +36,36 @@
         <p>Дата начала: @_book.Start</p>
         <p>Дата окончания: @_book.End</p>
         <p>Статус: @_book.Status</p>
-        <button @onclick="ChangeStatusToActive">Изменить статус на Active</button>
+        <button @onclick="ChangeStatusToActive">Подтвердить</button>
+        
+        @if (_user.Passport != null)
+        {
+            <div class="passport-info">
+                <h4>Паспортные данные</h4>
+                <div class="passport-header">
+                    <img src="@_user.AvatarUrl" alt="Avatar" class="passport-avatar" />
+                    <div class="passport-details">
+                        <p>Фамилия: @_user.Passport.Lastname</p>
+                        <p>Имя: @_user.Passport.Firstname</p>
+                        <p>Отчество: @_user.Passport.Middlename</p>
+                    </div>
+                </div>
+                <div class="passport-details">
+                    <p>Серия: @_user.Passport.Serial</p>
+                    <p>Номер: @_user.Passport.Number</p>
+                    <p>Выдан: @_user.Passport.IssuedBy</p>
+                    <p>Дата выдачи: @_user.Passport.IssuedOn.ToString("dd.MM.yyyy")</p>
+                    <p>Код подразделения: @_user.Passport.CodeOfIssuer</p>
+                    <p>Дата рождения: @_user.Passport.PassportBirthday.ToString("dd.MM.yyyy")</p>
+                </div>
+            </div>
+        }
     </div>
 }
 
 @code {
     private Book? _book;
+    private User? _user;
     private string? _errorMessage;
     private string? _qrCode;
     private DotNetObjectReference<ScanQR>? objRef;
@@ -52,7 +77,6 @@
     {
         if (firstRender)
         {
-            // await JsRuntime.InvokeAsync<Boolean>("jsFunctions.setLicense", Environment.GetEnvironmentVariable("QR_LICENSE"));
             await JsRuntime.InvokeAsync<Boolean>("jsFunctions.setLicense", "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAzNzUzNTE3LVRYbFFjbTlxIiwibWFpblNlcnZlclVSTCI6Imh0dHBzOi8vbWRscy5keW5hbXNvZnRvbmxpbmUuY29tIiwib3JnYW5pemF0aW9uSUQiOiIxMDM3NTM1MTciLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJjaGVja0NvZGUiOjkzMDAyMTQ0MX0=");
             objRef = DotNetObjectReference.Create(this);
             await JsRuntime.InvokeAsync<Boolean>("jsFunctions.initScanner", objRef, videoContainerId, videoSourceId, overlayId);
@@ -61,7 +85,7 @@
     }
     
     [JSInvokable]
-    public void ReturnBarcodeResultsAsync(string qrCode)
+    public async Task ReturnBarcodeResultsAsync(string qrCode)
     {
         try
         {
@@ -70,7 +94,8 @@
 
             if (id is not null)
             {
-                _book = BookService.GetBookById(id.Value).Result;
+                _book = await BookService.GetBookById(id.Value);
+                _user = _book?.User;
                 if (_book is null)
                     throw new Exception("Бронирование уже не существует");
             }
@@ -121,3 +146,73 @@
         }
     }
 }
+
+<style>
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: block;
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .client-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .client-details {
+        flex: 1;
+    }
+
+    .passport-info {
+        border: 1px solid #888;
+        padding: 10px;
+        margin-top: 20px;
+        background-color: #f9f9f9;
+    }
+
+    .passport-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .passport-avatar {
+        max-width: 100px;
+        border-radius: 20% / 50%;
+        margin-right: 20px;
+    }
+
+    .passport-details p {
+        margin: 5px 0;
+    }
+
+    .filters {
+        margin-bottom: 20px;
+    }
+</style>
