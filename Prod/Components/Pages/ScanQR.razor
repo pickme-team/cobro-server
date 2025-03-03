@@ -62,9 +62,26 @@
     }
     
     [JSInvokable]
-    public void ReturnBarcodeResultsAsync(String text)
+    public async Task ReturnBarcodeResultsAsync(string qrCode)
     {
-        result = text;
+        try
+        {
+            _qrCode = qrCode;
+            var id = QrService[long.Parse(qrCode)];
+
+            if (id is not null)
+            {
+                _book = await BookService.GetBookById(id.Value);
+                if (_book is null)
+                    throw new Exception("Бронирование уже не существует");
+            }
+            else
+                throw new Exception("Неверный код");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка: {ex.Message}";
+        }
         StateHasChanged();
     }
 
@@ -88,42 +105,6 @@
         await JsRuntime.InvokeVoidAsync("jsFunctions.stopCamera");
     }
 
-    private async Task StartScanning()
-    {
-        try
-        {
-            await JsRuntime.InvokeVoidAsync("startScanning");
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Ошибка: {ex.Message}";
-        }
-    }
-
-    [JSInvokable]
-    public async Task ProcessQrCode(string qrCode)
-    {
-        try
-        {
-            _qrCode = qrCode;
-            var id = QrService[long.Parse(qrCode)];
-
-            if (id is not null)
-            {
-                _book = await BookService.GetBookById(id.Value);
-                if (_book is null)
-                    throw new Exception("Бронирование уже не существует");
-            }
-            else
-                throw new Exception("Неверный код");
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Ошибка: {ex.Message}";
-        }
-        StateHasChanged();
-    }
-
     private async Task ChangeStatusToActive()
     {
         try
@@ -141,6 +122,3 @@
         }
     }
 }
-
-<script src="https://cdn.jsdelivr.net/npm/dynamsoft-capture-vision-bundle"></script>
-<script src="js/jsInterop.js"></script>
