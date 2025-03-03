@@ -194,8 +194,8 @@
             var fileName = _selectedFile.Name;
             
             await UserService.SetVerificationPhoto(stream, fileName, _user!.Id);
-            
-            _state = QrVerState.ShowUserPhoto;
+
+            _state = _user!.Passport is null ? QrVerState.InputPassportData : QrVerState.ShowUserPhoto;
             StateHasChanged();
         }
         catch (Exception ex)
