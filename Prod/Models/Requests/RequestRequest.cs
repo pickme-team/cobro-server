@@ -7,7 +7,7 @@ public class RequestRequest
 {
     [Required] public string Text { get; set; } = null!;
 
-    [Required] public long ActionId { get; set; }
+    public int? ActionNumber { get; set; }
 
     [Required] public RequestStatus Status { get; set; }
 
