@@ -24,7 +24,8 @@ public class AuthService(
             Name = request.Name,
             Email = request.Email,
             Password = hash,
-            Role = request.Email.EndsWith(configuration["CORPDOMAIN"] ?? "isntrui.ru") ? Role.INTERNAL : Role.CLIENT
+            Role = request.Email.EndsWith(configuration["CORPDOMAIN"] ?? "isntrui.ru") ? Role.INTERNAL : Role.CLIENT,
+            AvatarUrl = new Uri("https://storage.yandexcloud.net/cobro/e18a6de4fb8f19391b6a9b606bf0d7a6.jpg")
         };
         context.Users.Add(user);
         await context.SaveChangesAsync();
