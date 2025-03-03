@@ -31,7 +31,7 @@ public class BookController(IBookService bookService, IQrCodeService qrCodeServi
 
     [HttpPatch("/confirm-qr")]
     [Authorize(Policy = "Admin")]
-    public Task ConfirmQr([FromBody] ConfirmQrRequest req) =>
+    public Task<ConfirmQrResponse> ConfirmQr([FromBody] ConfirmQrRequest req) =>
         bookService.ConfirmQr(req);
 
     [HttpGet("last")]
@@ -81,7 +81,7 @@ public class BookController(IBookService bookService, IQrCodeService qrCodeServi
             return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
         }
     }
-    
+
     [HttpGet("qr")]
     [Authorize(Policy = "Admin")]
     public async Task<ActionResult<Book>> Qr([FromQuery] long id)

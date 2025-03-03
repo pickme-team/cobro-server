@@ -263,17 +263,30 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             .OrderByDescending(b => b.End)
             .LastOrDefaultAsync();
 
-    public async Task ConfirmQr(ConfirmQrRequest req)
+    public async Task<ConfirmQrResponse> ConfirmQr(ConfirmQrRequest req)
     {
         var expectedCode = qrCodeService[long.Parse(req.Code)];
         if (expectedCode == null)
             throw new ForbiddenException("Qr code not found or expired");
-        var book = await context.Books.SingleAsync(b => b.Id == expectedCode);
+        var book = await context.Books.Include(b => b.User).SingleAsync(b => b.Id == expectedCode);
         if (book.Status != Status.Pending)
             throw new ForbiddenException("This book is not pending");
 
+        if (book.User.PassportId == null && book.User.Role == Role.CLIENT)
+            return new ConfirmQrResponse
+            {
+                BookId = book.Id,
+                NeedsPassport = true
+            };
+
         book.Status = Status.Active;
         await context.SaveChangesAsync();
+
+        return new ConfirmQrResponse
+        {
+            BookId = book.Id,
+            NeedsPassport = false
+        };
     }
 
     public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid, Guid? seat)
@@ -373,6 +386,4 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
         return true;
     }
-    
-    
 }
