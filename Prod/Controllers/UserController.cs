@@ -91,26 +91,14 @@ public class UserController(IUserService userService) : ControllerBase
 
     [HttpGet("{id:guid}/verification-photo")]
     [Authorize(Policy = "Admin")]
-    public async Task<ActionResult> GetVerificationPhoto(Guid id)
-    {
-        var (stream, fileName) = await userService.GetVerificationPhoto(id);
-
-        var provider = new FileExtensionContentTypeProvider();
-
-        if (!provider.TryGetContentType(fileName, out var contentType))
-        {
-            // If the MIME type is not found, default to "application/octet-stream"
-            contentType = "application/octet-stream";
-        }
-
-        return File(stream, contentType, fileName);
-    }
+    public async Task<ActionResult> GetVerificationPhoto(Guid id) =>
+        Ok(new { Link = await userService.GetVerificationPhoto(id) });
 
     [HttpGet("{id:guid}/passport")]
     [Authorize(Policy = "Admin")]
     public async Task<ActionResult<Passport>> GetPassport(Guid id)
     {
-        User user = await userService.Get(id);
+        var user = await userService.Get(id);
         if (user.Passport is null) return NotFound();
         try
         {

@@ -24,7 +24,7 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
 
     public async Task<User> Get(Guid id) =>
         await UserQuery().SingleAsync(u => u.Id == id);
-    
+
     public async Task<UserResponse> UserByEmail(string email) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Email == email));
 
@@ -99,17 +99,11 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         await context.SaveChangesAsync();
     }
 
-    public async Task<(Stream, string)> GetVerificationPhoto(Guid id)
+    public async Task<Uri> GetVerificationPhoto(Guid id)
     {
         var user = await context.Users.SingleAsync(u => u.Id == id);
         if (user.VerificationPhoto == null)
             throw new NotFoundException("Verification photo not found");
-
-        var fileName = user.VerificationPhoto.Segments.Last();
-
-        var res = await objectStoreService.ObjectService.GetAsStreamAsync(fileName);
-        return res.IsSuccess
-            ? (res.Value, fileName)
-            : throw new NotFoundException("Verification photo not found in S3");
+        return user.VerificationPhoto;
     }
 }
