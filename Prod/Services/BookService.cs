@@ -47,7 +47,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
         };
 
-        var data = new BookRequest()
+        var data = new BookRequest
         {
             From = start,
             To = end,
@@ -76,6 +76,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
                 break;
             default:
                 throw new ForbiddenException("Not a bookable zone");
+            
+            
         }
     }
 
