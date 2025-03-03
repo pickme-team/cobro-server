@@ -17,6 +17,7 @@ public class UserController(IUserService userService) : ControllerBase
     public Task<UserResponse> GetUserById([FromRoute] Guid id) => userService.UserById(id);
 
     [HttpGet("all")]
+    [Authorize(Policy = "Admin")]
     public Task<List<UserResponse>> GetAllUsers() => userService.AllUsers();
 
     [HttpPut("{id}")]
