@@ -16,37 +16,40 @@
 
 @if (_book != null && _user != null)
 {
-    <div class="modal">
-        <h4>Информация о бронировании</h4>
-        <p>Описание: @_book.Description</p>
-        <p>Дата начала: @_book.Start</p>
-        <p>Дата окончания: @_book.End</p>
-        <p>Статус: @_book.Status</p>
-        <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
+    <div class="modal" style="display: block;">
+        <div class="modal-content">
+            <span class="close" @onclick="CloseModal">&times;</span>
+            <h4>Информация о бронировании</h4>
+            <p>Описание: @_book.Description</p>
+            <p>Дата начала: @_book.Start</p>
+            <p>Дата окончания: @_book.End</p>
+            <p>Статус: @_book.Status</p>
+            <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
 
-        @if (_user.Passport != null)
-        {
-            <div class="passport-info">
-                <h4>Паспортные данные</h4>
-                <div class="passport-header">
-                    <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
+            @if (_user.Passport != null)
+            {
+                <div class="passport-info">
+                    <h4>Паспортные данные</h4>
+                    <div class="passport-header">
+                        <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
+                        <div class="passport-details">
+                            <p>Фамилия: @_user.Passport.Lastname</p>
+                            <p>Имя: @_user.Passport.Firstname</p>
+                            <p>Отчество: @_user.Passport.Middlename</p>
+                        </div>
+                    </div>
                     <div class="passport-details">
-                        <p>Фамилия: @_user.Passport.Lastname</p>
-                        <p>Имя: @_user.Passport.Firstname</p>
-                        <p>Отчество: @_user.Passport.Middlename</p>
+                        <p>Серия: @_user.Passport.Serial</p>
+                        <p>Номер: @_user.Passport.Number</p>
                     </div>
                 </div>
-                <div class="passport-details">
-                    <p>Серия: @_user.Passport.Serial</p>
-                    <p>Номер: @_user.Passport.Number</p>
-                </div>
-            </div>
-        }
+            }
+        </div>
     </div>
 }
 
 <div class="manual-input">
-    <label for="qrCodeInput">Введите QR код вручную:</label>
+    <label for="qrCodeInput">Введите QR код вручную или сканируйте его:</label>
     <div class="qr-code-inputs">
         @for (int i = 0; i < 10; i++)
         {
@@ -64,6 +67,12 @@
     private string? _errorMessage;
     private char[] _manualQrCode = new char[10];
     private string? _qrCode;
+    
+    private void CloseModal()
+    {
+        _book = null;
+        _manualQrCode = new char[10];
+    }
 
     public async Task ReturnBarcodeResultsAsync(string qrCode)
     {
