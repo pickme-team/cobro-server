@@ -168,9 +168,9 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         await context.SaveChangesAsync();
     }
 
-    public async Task<BookResponse> Delete(Guid id)
+    public async Task<BookResponse> Delete(Guid guid)
     {
-        var book = await GetById(id);
+        var book = await GetById(guid);
         context.Books.Remove(book);
         await context.SaveChangesAsync();
         return BookResponse.From(book);
@@ -273,12 +273,12 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         await context.SaveChangesAsync();
     }
 
-    public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid)
+    public async Task<bool> Validate(Guid zoneId, DateTime from, DateTime to, Guid guid, Guid? seat)
     {
         var zone = await context.Zones.SingleAsync(z => z.Id == zoneId);
         return zone switch
         {
-            OfficeZone officeZone => await ValidateOfficeZone(officeZone, from, to, guid),
+            OfficeZone officeZone => await ValidateOfficeZone(officeZone, from, to, guid, seat!.Value),
             TalkroomZone talkroomZone => await ValidateTalkroomZone(talkroomZone, from, to, guid),
             OpenZone openZone => await ValidateOpenZone(openZone, from, to, guid),
             _ => throw new ForbiddenException("Not a bookable zone")
@@ -303,17 +303,30 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         return entities.Select(BookWithUserResponse.From).ToList();
     }
 
-    private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to, Guid userId)
+    private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to, Guid userId, Guid seatId)
     {
-        var seats = await context.Entry(zone)
-            .Collection(x => x.Seats)
-            .Query()
-            .ToListAsync();
-        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
+        if (zone == null)
+            throw new ArgumentNullException(nameof(zone));
 
-        return seats.Any(seat => !seat.Books.Any(b =>
+        if (seatId == Guid.Empty)
+            throw new ArgumentException("Seat ID cannot be empty", nameof(seatId));
+
+        var user = await userService.UserById(userId);
+        if (!zone.IsPublic && user.Role == Role.CLIENT)
+            return false;
+
+        var seat = await context.OfficeSeats
+            .Include(s => s.Books)
+            .FirstOrDefaultAsync(s => s.Id == seatId && s.OfficeZoneId == zone.Id);
+
+        if (seat == null)
+            throw new ArgumentException("Seat not found in the specified zone", nameof(seatId));
+
+        bool isSeatAvailable = !seat.Books.Any(b => 
             (b.Status == Status.Active || b.Status == Status.Pending) &&
-            b.Start < to && from < b.End));
+            b.Start < to && from < b.End);
+
+        return isSeatAvailable;
     }
 
     private async Task<bool> ValidateTalkroomZone(TalkroomZone zone, DateTime from, DateTime to, Guid userId)
