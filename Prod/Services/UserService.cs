@@ -85,13 +85,13 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         await context.SaveChangesAsync();
     }
 
-    public async Task SetVerificationPhoto(IFormFile file, Guid id)
+    public async Task SetVerificationPhoto(Stream file, string name, Guid id)
     {
-        if (file.Length == 0 || file.FileName.Split(".")[^1].Length == 0)
+        if (file.Length == 0 || name.Split(".")[^1].Length == 0)
             throw new ArgumentException("Invalid file");
-        string fileName = Guid.NewGuid() + "." + file.FileName.Split('.')[^1];
+        string fileName = Guid.NewGuid() + "." + name.Split('.')[^1];
 
-        await objectStoreService.ObjectService.PutAsync(file.OpenReadStream(), fileName);
+        await objectStoreService.ObjectService.PutAsync(file, fileName);
         var url = "https://storage.yandexcloud.net/cobro/" + fileName;
 
         var user = await context.Users.SingleAsync(u => u.Id == id);
