@@ -57,6 +57,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpPost("{id:guid}/passport")]
+    [Authorize(Policy = "Admin")]
     public async Task<ActionResult> SetPassport([FromForm] Passport passport, Guid id)
     {
         await userService.SetPassport(User.Id(), passport);
@@ -64,6 +65,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpPost("{id:guid}/verification-photo")]
+    [Authorize(Policy = "Admin")]
     public async Task<ActionResult> SetVerificationPhoto([FromBody] IFormFile file, Guid id)
     {
         try
@@ -78,6 +80,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpGet("{id:guid}/passport")]
+    [Authorize(Policy = "Admin")]
     public async Task<ActionResult<Passport>> GetPassport(Guid id)
     {
         User user = await userService.Get(id);
@@ -85,7 +88,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpGet("{id:guid}/verification")]
-    public async Task<ActionResult> Verification(Guid id)
+    public async Task<ActionResult<bool>> Verification(Guid id)
     {
         try
         {
