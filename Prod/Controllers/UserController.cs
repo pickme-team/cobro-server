@@ -59,7 +59,7 @@ public class UserController(IUserService userService) : ControllerBase
 
     [HttpPost("{id:guid}/passport")]
     [Authorize(Policy = "Admin")]
-    public async Task<ActionResult> SetPassport([FromForm] Passport passport, Guid id)
+    public async Task<ActionResult> SetPassport([FromBody] Passport passport, Guid id)
     {
         await userService.SetPassport(User.Id(), passport);
         return Ok();
