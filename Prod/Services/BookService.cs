@@ -28,14 +28,17 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         await context.SaveChangesAsync();
     }
 
-    public async Task EditDateBook(Guid bookId, DateTime start, DateTime end)
+    public async Task EditDateBook(Guid bookId, DateTime start, DateTime end, Guid? userId = null)
     {
         if (start > end)
             throw new ArgumentOutOfRangeException("Start date cannot be greater than end date");
-        
+
         await CancelBook(bookId);
 
         var book = await context.Books.SingleAsync(b => b.Id == bookId);
+        if (userId.HasValue && book.UserId != userId.Value)
+            throw new ForbiddenException("BRO WHY YOU EDITING SOMEONE ELSE'S BOOKING");
+
         var zoneId = book switch
         {
             OfficeBook officeBook => officeBook.OfficeSeat.OfficeZoneId,
@@ -322,7 +325,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         if (seat == null)
             throw new ArgumentException("Seat not found in the specified zone", nameof(seatId));
 
-        bool isSeatAvailable = !seat.Books.Any(b => 
+        bool isSeatAvailable = !seat.Books.Any(b =>
             (b.Status == Status.Active || b.Status == Status.Pending) &&
             b.Start < to && from < b.End);
 
