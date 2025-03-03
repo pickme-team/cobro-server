@@ -7,6 +7,7 @@
 @inject ILocalStorageService LocalStorage
 @inject IJwtService JwtService
 @rendermode InteractiveServer
+
 @code {
     private readonly SignInRequest _signInRequest = new SignInRequest();
     private readonly SignUpRequest _signUpRequest = new SignUpRequest();
@@ -23,7 +24,7 @@
             await LocalStorage.SetItemAsync("adminId", user.Id.ToString());
             Navigation.NavigateTo("/");
         }
-        catch (UnauthorizedException ex)
+        catch (UnauthorizedException)
         {
             _errorMessage = $"Неверно введёна почта или пароль";
         }
@@ -32,6 +33,7 @@
             _errorMessage = $"Ошибка: {ex.Message}";
         }
     }
+
 }
 
 <h3>Вход</h3>
@@ -42,15 +44,15 @@
 }
 
 <EditForm Model="@_signInRequest" OnValidSubmit="HandleSignIn" style="display: block;" FormName="SignInForm">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
     <div>
         <label>Электронная почта</label>
-        <InputText @bind-Value="_signInRequest.Email" class="form-control" />
+        <InputText @bind-Value="_signInRequest.Email" class="form-control"/>
     </div>
     <div>
         <label>Пароль</label>
-        <InputText @bind-Value="_signInRequest.Password" type="password" class="form-control" />
+        <InputText @bind-Value="_signInRequest.Password" type="password" class="form-control"/>
     </div>
     <button type="submit" class="btn btn-primary">Войти</button>
 </EditForm>

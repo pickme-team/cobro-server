@@ -20,12 +20,12 @@ public class TestContainers : IAsyncLifetime
     private static readonly CommonDirectoryPath Solution = CommonDirectoryPath.GetSolutionDirectory();
     private static readonly StringLogger Logger = new StringLogger();
     private static IReadOnlyDictionary<string, string> Envs => ExtractEnvironmentVariables();
-    
-    private static readonly INetwork Network = 
+
+    private static readonly INetwork Network =
         new NetworkBuilder()
             .WithDriver(NetworkDriver.Bridge)
             .Build();
-    
+
     public Uri BaseAddress { get; private set; } = null!;
     public HttpClient Client { get; private set; } = null!;
 
@@ -39,7 +39,7 @@ public class TestContainers : IAsyncLifetime
             .WithLogger(Logger)
             .Build();
 
-    private static readonly PostgreSqlContainer _dbContainer = 
+    private static readonly PostgreSqlContainer _dbContainer =
         new PostgreSqlBuilder()
             .WithImage(pgImage)
             .WithPortBinding(8059, 5432)
@@ -69,7 +69,7 @@ public class TestContainers : IAsyncLifetime
             var kayValue = line.Split('=');
             dict[kayValue[0]] = kayValue[1];
         }
-        
+
         return dict;
     }
 
@@ -79,7 +79,7 @@ public class TestContainers : IAsyncLifetime
         {
             var imageTask = image.CreateAsync();
             var dbTask = _dbContainer.StartAsync();
-            
+
             await Task.WhenAll(imageTask, dbTask);
         }
         catch (Exception ex)
@@ -89,7 +89,7 @@ public class TestContainers : IAsyncLifetime
             throw new Exception(msg, ex);
         }
     }
-    
+
     public async Task InitializeAsync()
     {
         try

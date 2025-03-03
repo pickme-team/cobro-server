@@ -12,19 +12,19 @@ public class SignUpRequest
     /// </summary>
     /// <example>John Doe</example>
     [Required]
-    public string Name { get; set; }
+    public string Name { get; init; } = null!;
 
     /// <summary>
     /// Email пользователя.
     /// </summary>
     /// <example>john.doe@example.com</example>
     [Required, Email]
-    public string Email { get; set; }
+    public string Email { get; init; } = null!;
 
     /// <summary>
     /// Пароль пользователя.
     /// </summary>
     /// <example>StrongPassword123!</example>
     [Required]
-    public string Password { get; set; }
+    public string Password { get; init; } = null!;
 }

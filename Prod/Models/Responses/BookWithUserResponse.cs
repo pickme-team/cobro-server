@@ -28,8 +28,8 @@ public class BookWithUserResponse : BookResponse
             TalkroomBook talkroomBook => talkroomBook.TalkroomZone.Name,
             _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
         },
-        OfficeSeatId = book is OfficeBook ob ? ob.OfficeSeatId : null,
-        OfficeSeatNumber = book is OfficeBook ob1 ? ob1.OfficeSeat.InnerNumber : null,
+        OfficeSeatId = (book as OfficeBook)?.OfficeSeatId,
+        OfficeSeatNumber = (book as OfficeBook)?.OfficeSeat.InnerNumber,
         User = UserResponse.From(book.User)
     };
 }

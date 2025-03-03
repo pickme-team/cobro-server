@@ -51,7 +51,7 @@ public class JwtService : IJwtService
         );
         return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
-    
+
     public User GetUserFromToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -70,10 +70,10 @@ public class JwtService : IJwtService
         };
 
         var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken validatedToken);
-        
-        var userIdClaim = principal.Claims.FirstOrDefault(c => c.Type == ClaimsIdentity.DefaultNameClaimType);
-        var adminClaim = principal.Claims.FirstOrDefault(c => c.Type == "admin");
-        
+
+        var userIdClaim = principal.Claims.First(c => c.Type == ClaimsIdentity.DefaultNameClaimType);
+        var adminClaim = principal.Claims.First(c => c.Type == "admin");
+
         return new User
         {
             Id = Guid.Parse(userIdClaim.Value),

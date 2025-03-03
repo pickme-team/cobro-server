@@ -5,11 +5,12 @@ namespace Prod.Models.Requests;
 
 public class BookRequest : IValidatableObject
 {
-    public DateTime From { get; set; }
+    public DateTime From { get; init; }
 
-    public DateTime To { get; set; }
+    public DateTime To { get; init; }
 
-    public string? Description { get; set; }
+    public string? Description { get; init; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (From < DateTime.UtcNow)

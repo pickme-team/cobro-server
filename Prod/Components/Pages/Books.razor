@@ -8,11 +8,11 @@
 <h3>Бронирования</h3>
 
 <div class="filters">
-    <input type="text" placeholder="Поиск по имени пользователя" @bind="userNameFilter" />
+    <input type="text" placeholder="Поиск по имени пользователя" @bind="userNameFilter"/>
     <label>Дата начала:</label>
-    <input type="datetime-local" @bind="startDateFilter" />
+    <input type="datetime-local" @bind="startDateFilter"/>
     <label>Дата окончания:</label>
-    <input type="datetime-local" @bind="endDateFilter" />
+    <input type="datetime-local" @bind="endDateFilter"/>
     <button @onclick="ApplyFilters">Применить фильтры</button>
 </div>
 
@@ -66,14 +66,15 @@
     {
         try
         {
+            // Throws if book isnt found
             await BookService.CancelBook(bookId);
-            var book = _books.FirstOrDefault(b => b.Id == bookId);
-            if (book != null)
-            {
-                _books.Remove(book);
-                ApplyFilters();
-                StateHasChanged();
-            }
+            var book = _books.First(b => b.Id == bookId);
+            _books.Remove(book);
+            ApplyFilters();
+            StateHasChanged();
+        }
+        catch (InvalidOperationException)
+        {
         }
         catch (Exception ex)
         {
@@ -102,6 +103,7 @@
                 ApplyFilters();
                 StateHasChanged();
             }
+
             CloseModal();
             StateHasChanged();
         }
@@ -119,7 +121,7 @@
             (!endDateFilter.HasValue || b.End <= endDateFilter.Value.ToUniversalTime())).ToList();
         StateHasChanged();
     }
-    
+
     private string GetGroupName(string typeName) => typeName switch
     {
         nameof(OpenBook) => "Опенспейс",
@@ -172,7 +174,7 @@
                 @if (_selectedUser.AvatarUrl != null)
                 {
                     <div class="client-avatar">
-                        <img src="@_selectedUser.AvatarUrl.ToString()" alt="Avatar" />
+                        <img src="@_selectedUser.AvatarUrl.ToString()" alt="Avatar"/>
                     </div>
                 }
             </div>
@@ -197,63 +199,63 @@
             <button @onclick="SaveDates">Сохранить</button>
         </div>
     </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: block;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%;
+            max-width: 500px;
+            max-height: 70%;
+            overflow: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .client-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .client-details {
+            flex: 1;
+        }
+
+        .client-avatar {
+            margin-left: 20px;
+        }
+
+        .client-avatar img {
+            max-width: 100px;
+            border-radius: 20% / 50%;
+        }
+
+        .filters {
+            margin-bottom: 20px;
+        }
+    </style>
 }
-
-<style>
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: block;
-    }
-
-    .modal-content {
-        background-color: #fff;
-        margin: 10% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 60%;
-        max-width: 500px;
-        max-height: 70%;
-        overflow: auto;
-    }
-
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .client-info {
-        display: flex;
-        align-items: center;
-    }
-
-    .client-details {
-        flex: 1;
-    }
-
-    .client-avatar {
-        margin-left: 20px;
-    }
-
-    .client-avatar img {
-        max-width: 100px;
-        border-radius: 20% / 50%;
-    }
-
-    .filters {
-        margin-bottom: 20px;
-    }
-</style>

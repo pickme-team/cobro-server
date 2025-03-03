@@ -8,21 +8,18 @@ namespace Prod.Services;
 
 public class BookService(ProdContext context, IQrCodeService qrCodeService, IUserService userService) : IBookService
 {
+    private IQueryable<Book> BooksQuery => context.Books
+        .Include(b => ((OpenBook)b).OpenZone)
+        .Include(b => ((TalkroomBook)b).TalkroomZone)
+        .Include(b => ((OfficeBook)b).OfficeSeat)
+        .Include(b => b.User);
+
     public async Task<List<Book>> GetAllActiveBooks() =>
-        await context.Books
-            .Include(b => ((OpenBook)b).OpenZone)
-            .Include(b => ((TalkroomBook)b).TalkroomZone)
-            .Include(b => ((OfficeBook)b).OfficeSeat)
-            .Include(b => b.User)
-            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .ToListAsync();
+        await BooksQuery.Where(b => b.Status == Status.Active || b.Status == Status.Pending).ToListAsync();
 
     public async Task CancelBook(Guid bookId)
     {
-        var book = await context.Books.FindAsync(bookId);
-
-        if (book == null)
-            return;
+        var book = await context.Books.SingleAsync(b => b.Id == bookId);
 
         book.Status = Status.Cancelled;
         await context.SaveChangesAsync();
@@ -47,7 +44,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             _ => throw new ArgumentOutOfRangeException(nameof(book), book, null)
         };
 
-        var data = new BookRequest()
+        var data = new BookRequest
         {
             From = start,
             To = end,
@@ -66,7 +63,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         switch (zone)
         {
             case OfficeZone officeZone:
-                await BookSeat(officeZone, seatId!.Value, userId, bookRequest);
+                await BookOfficeSeat(officeZone, seatId!.Value, userId, bookRequest);
                 break;
             case TalkroomZone talkroomZone:
                 await BookTalkroomZone(talkroomZone, userId, bookRequest);
@@ -79,20 +76,15 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         }
     }
 
-    private async Task BookSeat(OfficeZone zone, Guid seatId, Guid userId, BookRequest req)
+    private async Task BookOfficeSeat(OfficeZone zone, Guid seatId, Guid userId, BookRequest req)
     {
         var seat = await context.Entry(zone)
             .Collection(x => x.Seats)
             .Query()
             .SingleAsync(x => x.Id == seatId);
 
-        var overlaps = await context.Entry(seat)
-            .Collection(s => s.Books)
-            .Query()
-            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .AnyAsync(b => b.Start < req.To.ToUniversalTime() && req.From.ToUniversalTime() < b.End);
-
-        if (overlaps) throw new ForbiddenException("Time not available");
+        if (!await IsOfficeSeatAvailable(seat, req.From, req.To))
+            throw new ForbiddenException("Time not available");
 
         context.Books.Add(new OfficeBook
         {
@@ -108,13 +100,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     private async Task BookTalkroomZone(TalkroomZone zone, Guid userId, BookRequest req)
     {
-        var overlaps = await context.Entry(zone)
-            .Collection(z => z.Books)
-            .Query()
-            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .AnyAsync(b => b.Start < req.To.ToUniversalTime() && req.From.ToUniversalTime() < b.End);
-
-        if (overlaps) throw new ForbiddenException("Time not available");
+        if (!await IsTalkroomZoneAvailable(zone, req.From, req.To))
+            throw new ForbiddenException("Time not available");
 
         context.Books.Add(new TalkroomBook
         {
@@ -130,34 +117,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     private async Task BookOpenZone(OpenZone zone, Guid userId, BookRequest req)
     {
-        var timespans = await context.Entry(zone)
-            .Collection(z => z.Books)
-            .Query()
-            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .Select(b => new { b.Start, b.End })
-            .ToListAsync();
-        var capacity = zone.Capacity;
-
-        // true - start
-        var events = timespans
-            .SelectMany(t => new List<(DateTime, bool)> { (t.Start, true), (t.End, false) })
-            .OrderBy(t => t.Item1);
-
-        var overlapCount = 0;
-
-        foreach (var (time, type) in events)
-        {
-            if (type)
-            {
-                overlapCount++;
-                if (overlapCount == capacity && time >= req.From && time <= req.To)
-                    throw new ForbiddenException("Time not available");
-            }
-            else
-            {
-                overlapCount--;
-            }
-        }
+        if (!await IsOpenZoneAvailable(zone, req.From, req.To))
+            throw new ForbiddenException("Time not available");
 
         context.Books.Add(new OpenBook
         {
@@ -171,21 +132,13 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         await context.SaveChangesAsync();
     }
 
-    public async Task<BookResponse> Delete(Guid guid)
+    public async Task<BookResponse> Delete(Guid id)
     {
-        var book = await GetById(guid);
+        var book = await BooksQuery.SingleAsync(b => b.Id == id);
         context.Books.Remove(book);
         await context.SaveChangesAsync();
         return BookResponse.From(book);
     }
-
-    private Task<Book> GetById(Guid id) =>
-        context.Books
-            .Include(b => ((OpenBook)b).OpenZone)
-            .Include(b => ((TalkroomBook)b).TalkroomZone)
-            .Include(b => ((OfficeBook)b).OfficeSeat)
-            .ThenInclude(s => s.OfficeZone)
-            .SingleAsync(b => b.Id == id);
 
     public async Task<List<BookResponse>> GetBooks(Guid id, Guid? seatId)
     {
@@ -245,37 +198,17 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
     }
 
     public Task<List<Book>> ActiveBooks(Guid id) =>
-        context.Books
-            .Include(b => ((OpenBook)b).OpenZone)
-            .Include(b => ((TalkroomBook)b).TalkroomZone)
-            .Include(b => ((OfficeBook)b).OfficeSeat)
-            .Where(b => b.UserId == id && b.Status == Status.Active)
-            .ToListAsync();
+        BooksQuery.Where(b => b.UserId == id && b.Status == Status.Active).ToListAsync();
 
     public async Task<List<BookWithUserResponse>> ActiveBooks() =>
-        (await context.Books
-            .Include(b => ((OpenBook)b).OpenZone)
-            .Include(b => ((TalkroomBook)b).TalkroomZone)
-            .Include(b => ((OfficeBook)b).OfficeSeat)
-            .Include(b => b.User)
-            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .ToListAsync())
+        (await BooksQuery.Where(b => b.Status == Status.Active || b.Status == Status.Pending).ToListAsync())
         .Select(BookWithUserResponse.From).ToList();
 
     public async Task<List<Book>> UserHistory(Guid id) =>
-        await context.Books
-            .Include(b => ((OpenBook)b).OpenZone)
-            .Include(b => ((TalkroomBook)b).TalkroomZone)
-            .Include(b => ((OfficeBook)b).OfficeSeat)
-            .Where(b => b.UserId == id && b.Status != Status.Active)
-            .ToListAsync();
+        await BooksQuery.Where(b => b.UserId == id && b.Status != Status.Active).ToListAsync();
 
     public async Task<Book?> LastBook(Guid id) =>
-        await context.Books
-            .Include(b => ((OpenBook)b).OpenZone)
-            .Include(b => ((TalkroomBook)b).TalkroomZone)
-            .Include(b => ((OfficeBook)b).OfficeSeat)
-            .Where(b => b.UserId == id && b.Status == Status.Ended)
+        await BooksQuery.Where(b => b.UserId == id && b.Status == Status.Ended)
             .OrderByDescending(b => b.End)
             .LastOrDefaultAsync();
 
@@ -324,11 +257,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     public async Task<List<BookWithUserResponse>> GetAll()
     {
-        var entities = await context.Books
-            .Include(b => ((OpenBook)b).OpenZone)
-            .Include(b => ((TalkroomBook)b).TalkroomZone)
-            .Include(b => ((OfficeBook)b).OfficeSeat)
-            .Include(b => b.User)
+        var entities = await BooksQuery
             .ToListAsync();
 
         foreach (var entity in entities)
@@ -400,9 +329,6 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     private async Task<bool> ValidateOfficeZone(OfficeZone zone, DateTime from, DateTime to, Guid userId, Guid seatId)
     {
-        if (zone == null)
-            throw new ArgumentNullException(nameof(zone));
-
         if (seatId == Guid.Empty)
             throw new ArgumentException("Seat ID cannot be empty", nameof(seatId));
         var user = await userService.UserById(userId);
@@ -416,7 +342,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         if (seat == null)
             throw new ArgumentException("Seat not found in the specified zone", nameof(seatId));
 
-        bool isSeatAvailable = !seat.Books.Any(b =>
+        var isSeatAvailable = !seat.Books.Any(b =>
             (b.Status == Status.Active || b.Status == Status.Pending) &&
             b.Start < to && from < b.End);
 
@@ -425,45 +351,22 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     private async Task<bool> ValidateTalkroomZone(TalkroomZone zone, DateTime from, DateTime to, Guid userId)
     {
-        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
-        return !await context.Entry(zone)
-            .Collection(z => z.Books)
-            .Query()
-            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .AnyAsync(b => b.Start < to && from < b.End);
+        if (!zone.IsPublic && (await userService.UserById(userId)).Role == Role.CLIENT) return false;
+        return await IsTalkroomZoneAvailable(zone, from, to);
     }
 
     private async Task<bool> ValidateOpenZone(OpenZone zone, DateTime from, DateTime to, Guid userId)
     {
-        if (!zone.IsPublic && userService.UserById(userId).Result.Role == Role.CLIENT) return false;
-        var books = await context.Entry(zone)
-            .Collection(z => z.Books)
+        if (!zone.IsPublic && (await userService.UserById(userId)).Role == Role.CLIENT) return false;
+        return await IsOpenZoneAvailable(zone, from, to);
+    }
+
+    private async Task<bool> IsOfficeSeatAvailable(OfficeSeat seat, DateTime from, DateTime to) =>
+        !await context.Entry(seat)
+            .Collection(s => s.Books)
             .Query()
             .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
-            .ToListAsync();
-
-        var events = books
-            .SelectMany(b => new List<(DateTime, bool)> { (b.Start, true), (b.End, false) })
-            .OrderBy(t => t.Item1)
-            .ToList();
-
-        var overlapCount = 0;
-        foreach (var (time, isStart) in events)
-        {
-            if (isStart)
-            {
-                overlapCount++;
-                if (overlapCount == zone.Capacity && time >= from && time <= to)
-                    return false;
-            }
-            else
-            {
-                overlapCount--;
-            }
-        }
-
-        return true;
-    }
+            .AnyAsync(b => b.Start < to.ToUniversalTime() && from.ToUniversalTime() < b.End);
 
     private async Task<bool> IsTalkroomZoneAvailable(TalkroomZone zone, DateTime from, DateTime to) =>
         !await context.Books
@@ -475,27 +378,27 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
     private async Task<bool> IsOpenZoneAvailable(OpenZone zone, DateTime from, DateTime to)
     {
-        var books = await context.Books
-            .OfType<OpenBook>()
-            .Where(b => b.OpenZoneId == zone.Id && (b.Status == Status.Active || b.Status == Status.Pending))
+        var timespans = await context.Entry(zone)
+            .Collection(z => z.Books)
+            .Query()
+            .Where(b => b.Status == Status.Active || b.Status == Status.Pending)
+            .Select(b => new { b.Start, b.End })
             .ToListAsync();
+        var capacity = zone.Capacity;
 
-        var events = books
-            .SelectMany(b => new List<(DateTime Time, bool IsStart)>
-            {
-                (b.Start.ToUniversalTime(), true),
-                (b.End.ToUniversalTime(), false)
-            })
-            .OrderBy(e => e.Time);
+        // true - start
+        var events = timespans
+            .SelectMany(t => new List<(DateTime, bool)> { (t.Start, true), (t.End, false) })
+            .OrderBy(t => t.Item1);
 
         var overlapCount = 0;
 
-        foreach (var (time, isStart) in events)
+        foreach (var (time, type) in events)
         {
-            if (isStart)
+            if (type)
             {
                 overlapCount++;
-                if (overlapCount > zone.Capacity && time >= from.ToUniversalTime() && time <= to.ToUniversalTime())
+                if (overlapCount == capacity && time >= from.ToUniversalTime() && time <= to.ToUniversalTime())
                     return false;
             }
             else
