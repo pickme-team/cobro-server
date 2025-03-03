@@ -80,7 +80,7 @@ public class UserController(IUserService userService) : ControllerBase
     {
         try
         {
-            await userService.SetVerificationPhoto(file, id);
+            await userService.SetVerificationPhoto(file.OpenReadStream(), file.FileName, id);
             return Ok();
         }
         catch (ArgumentException e)
