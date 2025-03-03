@@ -4,6 +4,7 @@
 @using Prod.Services
 @inject IBookService BookService
 @inject IQrCodeService QrService
+@inject IUserService UserService
 @inject IJSRuntime JsRuntime
 @rendermode InteractiveServer
 
@@ -94,29 +95,48 @@
                             <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
                             <button @onclick="DiscardRequest" class="discard-button">Отклонить</button>
                         }
+
+                        break;
+                    case QrVerState.InputPassportData:
+                        var passport = new PassportCreateRequest();
+                        <EditForm Model="@passport" OnValidSubmit="() => SetNewPassportData(passport)" style="display: block;" FormName="SignInForm">
+                            <DataAnnotationsValidator/>
+                            <ValidationSummary/>
+                            <div>
+                                <label>Серия</label>
+                                <InputText @bind-Value="passport.Serial" class="form-control"/>
+                            </div>
+                            <div>
+                                <label>Номер</label>
+                                <InputText @bind-Value="passport.Number" class="form-control"/>
+                            </div>
+                            <div>
+                                <label>Имя</label>
+                                <InputText @bind-Value="passport.Firstname" class="form-control"/>
+                            </div>
+                            <div>
+                                <label>Фамилия</label>
+                                <InputText @bind-Value="passport.Lastname" class="form-control"/>
+                            </div>
+                            <div>
+                                <label>Отчество</label>
+                                <InputText @bind-Value="passport.Middlename" class="form-control"/>
+                            </div>
+                            <div>
+                                <label>Дата рождения</label>
+                                <InputText @bind-Value="passport.Birthday" type="datetime-local" class="form-control"/>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Подтвердить</button>
+                        </EditForm>
+                        break;
+                    case QrVerState.TakeNewPhoto:
+                        <div>
+                            <label for="fileInput">Загрузите фотографию:</label>
+                            <InputFile id="fileInput" OnChange="OnFileChange" accept="image/*" />
+                        </div>
+                        <button @onclick="UploadPhoto" class="confirm-button">Загрузить</button>
                         break;
                 }
-
-                @if (_user.Passport != null)
-                {
-                    <div class="passport-info">
-                        <h4>Паспортные данные</h4>
-                        <div class="passport-header">
-                            <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
-                            <div class="passport-details">
-                                <p>Фамилия: @_user.Passport.Lastname</p>
-                                <p>Имя: @_user.Passport.Firstname</p>
-                                <p>Отчество: @_user.Passport.Middlename</p>
-                            </div>
-                        </div>
-                        <div class="passport-details">
-                            <p>Серия: @_user.Passport.Serial</p>
-                            <p>Номер: @_user.Passport.Number</p>
-                        </div>
-                    </div>
-                }
-
-                <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
             </div>
         </div>
     }
@@ -152,6 +172,36 @@
     private char[] _manualQrCode = new char[10];
     private string? _qrCode;
     private QrVerState _state = QrVerState.Start;
+    private IBrowserFile? _selectedFile;
+
+    private void OnFileChange(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.File;
+    }
+    
+    private async Task UploadPhoto()
+    {
+        if (_selectedFile == null)
+        {
+            _errorMessage = "Файл не выбран.";
+            return;
+        }
+
+        try
+        {
+            await using var stream = _selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            var fileName = _selectedFile.Name;
+            
+            await UserService.SetVerificationPhoto(stream, fileName, _user!.Id);
+            
+            _state = QrVerState.ShowUserPhoto;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка при загрузке файла: {ex.Message}";
+        }
+    }
     
     private string GetGroupName(string typeName) => typeName switch
     {
@@ -167,6 +217,16 @@
         _manualQrCode = new char[10];
         _state = QrVerState.Start;
         StateHasChanged();
+    }
+
+    private async Task SetNewPassportData(PassportCreateRequest request)
+    {
+        if (_state == QrVerState.InputPassportData)
+        {
+            await UserService.SetPassport(_user!.Id, request);
+        }
+
+        await ChangeStatusToActive();
     }
 
     public async Task ReturnBarcodeResultsAsync(string qrCode)
@@ -334,6 +394,21 @@
     .process-button:hover,
     .confirm-button:hover {
         background-color: #45a049;
+    }
+
+    .file-input {
+        margin-top: 20px;
+    }
+
+    .file-input label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .file-input input[type="file"] {
+        display: block;
+        margin-bottom: 20px;
     }
 </style>
 

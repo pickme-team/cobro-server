@@ -80,7 +80,7 @@ public class UserController(IUserService userService) : ControllerBase
     {
         try
         {
-            await userService.SetVerificationPhoto(file, id);
+            await userService.SetVerificationPhoto(file.OpenReadStream(), file.FileName, id);
             return Ok();
         }
         catch (ArgumentException e)
@@ -104,6 +104,7 @@ public class UserController(IUserService userService) : ControllerBase
         {
             var passport = new Passport
             {
+                Id = user.Passport.Id,
                 Number = user.Passport.Number.Substring(0, 2) + new string('*', user.Passport.Number.Length - 4) +
                          user.Passport.Number.Substring(user.Passport.Number.Length - 2),
                 Serial = user.Passport.Number.Substring(0, 2) + new string('*', user.Passport.Number.Length - 2),

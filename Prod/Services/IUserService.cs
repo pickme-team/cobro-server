@@ -20,7 +20,7 @@ public interface IUserService
 
     Task<string> UploadMedia(IFormFile file, Guid id);
 
-    Task SetVerificationPhoto(IFormFile file, Guid id);
+    Task SetVerificationPhoto(Stream file, string name, Guid id);
     Task<Uri> GetVerificationPhoto(Guid id);
 
     Task SetPassport(Guid userId, PassportCreateRequest req);
