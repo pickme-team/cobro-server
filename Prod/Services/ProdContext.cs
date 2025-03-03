@@ -1,4 +1,3 @@
-using System.Drawing;
 using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
 
