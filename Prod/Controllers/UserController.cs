@@ -93,7 +93,25 @@ public class UserController(IUserService userService) : ControllerBase
     public async Task<ActionResult<Passport>> GetPassport(Guid id)
     {
         User user = await userService.Get(id);
-        return Ok(user.Passport);
+        if (user.Passport is null) return NotFound();
+        try
+        {
+            var passport = new Passport
+            {
+                Number = user.Passport.Number.Substring(0, 2) + new string('*', user.Passport.Number.Length - 4) +
+                         user.Passport.Number.Substring(user.Passport.Number.Length - 2),
+                Serial = user.Passport.Number.Substring(0, 2) + new string('*', user.Passport.Number.Length - 2),
+                Firstname = user.Passport.Firstname,
+                Lastname = user.Passport.Lastname,
+                Middlename = user.Passport.Middlename,
+                Birthday = user.Passport.Birthday
+            };
+            return Ok(passport);
+        }
+        catch
+        {
+            return Ok(user.Passport);
+        }
     }
 
     [HttpGet("{id:guid}/verification")]
