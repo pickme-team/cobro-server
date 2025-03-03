@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
 using Prod.Models.Requests;
+using Prod.Models.Responses;
 
 namespace Prod.Services;
 
 public class DecorationService(ProdContext context) : IDecorationService
 {
-    public Task<List<Decoration>> GetAll() => context.Decorations.ToListAsync();
+    public async Task<List<DecorationResponse>> GetAll() =>
+        (await context.Decorations.ToListAsync()).Select(DecorationResponse.From).ToList();
 
     public Task Add(DecorationCreateRequest req)
     {

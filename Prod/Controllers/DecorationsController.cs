@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Prod.Models.Database;
 using Prod.Models.Requests;
+using Prod.Models.Responses;
 using Prod.Services;
 
 namespace Prod.Controllers;
@@ -15,5 +15,5 @@ public class DecorationsController(IDecorationService decorationService) : Contr
     public Task Add([FromBody] DecorationCreateRequest req) => decorationService.Add(req);
 
     [HttpGet]
-    public Task<List<Decoration>> GetAll() => decorationService.GetAll();
+    public Task<List<DecorationResponse>> GetAll() => decorationService.GetAll();
 }
