@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Prod.Exceptions;
@@ -59,11 +61,11 @@ public class BookController(IBookService bookService) : ControllerBase
     }
 
     [HttpGet("{id:guid}/validate")]
-    public async Task<ActionResult> Validate(Guid id, [FromQuery] DateTime from, [FromQuery] DateTime to)
+    public async Task<ActionResult> Validate(Guid id, [FromQuery] DateTime from, [FromQuery] DateTime to, [FromQuery] Guid? seatId)
     {
         try
         {
-            var isAvailable = await bookService.Validate(id, from, to, User.Id());
+            var isAvailable = await bookService.Validate(id, from, to, User.Id(), seatId);
             return isAvailable
                 ? Ok()
                 : StatusCode(StatusCodes.Status409Conflict, "Time not available");

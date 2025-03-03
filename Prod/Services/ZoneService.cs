@@ -75,7 +75,7 @@ public class ZoneService(ProdContext context, IBookService bookService) : IZoneS
 
     public async Task<int> GetCurrentUsersCount(Guid id)
     {
-        var zone = await context.Zones.SingleAsync(z => z.Id == id);
+        var zone = await Get(id);
         var res = 0;
         bookService.GetBooks(zone.Id, null).Result.ForEach(book =>
         {
