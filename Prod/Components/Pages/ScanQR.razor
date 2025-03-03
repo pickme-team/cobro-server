@@ -93,7 +93,7 @@
     private async Task ProcessManualQrCode()
     {
         var qrCode = new string(_manualQrCode);
-        if (!string.IsNullOrEmpty(qrCode) && qrCode.Trim().Length == 10)
+        if (!string.IsNullOrEmpty(qrCode))
             await ReturnBarcodeResultsAsync(qrCode);
         else
             _errorMessage = "Введите код целиком";
