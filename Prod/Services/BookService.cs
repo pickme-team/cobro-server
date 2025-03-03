@@ -6,7 +6,7 @@ using Prod.Models.Responses;
 
 namespace Prod.Services;
 
-public class BookService(ProdContext context, IQrCodeService qrCodeService, IUserService userService) : IBookService
+public class BookService(ProdContext context, IQrCodeService qrCodeService, IUserService userService, IEmailService emailService) : IBookService
 {
     private IQueryable<Book> BooksQuery => context.Books
         .Include(b => ((OpenBook)b).OpenZone)
@@ -74,6 +74,109 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             default:
                 throw new ForbiddenException("Not a bookable zone");
         }
+        
+        string messageTemplate = @"
+<!DOCTYPE html>
+<html lang=""ru"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Бронирование коворкинга зафиксировано!</title>
+    <style>
+        body {{
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #000000;
+            margin: 0;
+            padding: 0;
+            color: #ffffff;
+        }}
+        .container {{
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #444444;
+            border-radius: 8px;
+        }}
+        .header {{
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #444444;
+        }}
+        .header h1 {{
+            font-size: 24px;
+            margin: 0;
+        }}
+        .content {{
+            padding: 20px 0;
+        }}
+        .content p {{
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }}
+        .booking-info {{
+            background-color: #333333;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }}
+        .booking-info h2 {{
+            font-size: 18px;
+            margin-top: 0;
+        }}
+        .booking-info ul {{
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }}
+        .booking-info li {{
+            margin-bottom: 10px;
+        }}
+        .booking-info li strong {{
+            font-weight: bold;
+        }}
+        .footer {{
+            text-align: center;
+            padding-top: 20px;
+            font-size: 12px;
+            color: #bbbbbb;
+        }}
+    </style>
+</head>
+<body>
+<div class=""container"">
+    <div class=""header"">
+        <h1>Бронирование коворкинга зафиксировано!</h1>
+    </div>
+    <div class=""content"">
+        <p>Спасибо за бронирование коворкинга в <b>cobro</b>! Мы рады видеть вас у нас.</p>
+        <div class=""booking-info"">
+            <h2>Детали бронирования:</h2>
+            <ul>
+                <li><strong>Дата:</strong> {{date}}</li>
+                <li><strong>Время:</strong> {{time}} — {{time2}}</li>
+                <li><strong>Коворкинг:</strong> {{coworkingName}}</li>
+                <li><strong>Наш адрес:</strong> Москва, бульвар Маршала Рокоссовского, 25, подъезд 1</li>
+                <a href=""https://yandex.ru/maps/?rtext=~55.814598,37.718186&rtt=auto"">Маршрут на Я.Картах</a>
+            </ul>
+        </div>
+        <p>Мы ждем вас в назначенное время. Если у вас есть вопросы, не стесняйтесь обращаться к нам.</p>
+    </div>
+    <div class=""footer"">
+        <p>&copy; 2025 cobro. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>
+";
+
+    var message = messageTemplate
+        .Replace("{{date}}", bookRequest.From.AddHours(3).ToString("d"))
+        .Replace("{{time}}", bookRequest.From.AddHours(3).ToString("t"))
+        .Replace("{{time2}}", bookRequest.To.AddHours(3).ToString("t"))
+        .Replace("{{coworkingName}}", zone.Name);
+        await emailService.SendEmailAsync(userService.UserById(userId).Result.Email, "Бронирование коворкинго успешно!", message);
     }
 
     private async Task BookOfficeSeat(OfficeZone zone, Guid seatId, Guid userId, BookRequest req)
