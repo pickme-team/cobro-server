@@ -61,8 +61,15 @@ public class UserController(IUserService userService) : ControllerBase
     [Authorize(Policy = "Admin")]
     public async Task<ActionResult> SetPassport([FromBody] Passport passport, Guid id)
     {
-        await userService.SetPassport(User.Id(), passport);
-        return Ok();
+        try
+        {
+            await userService.SetPassport(id, passport);
+            return Ok();
+        }
+        catch (ArgumentException e)
+        {
+            return Conflict(new { e.Message });
+        }
     }
 
     [HttpPost("{id:guid}/verification-photo")]
