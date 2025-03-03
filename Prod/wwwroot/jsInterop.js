@@ -17,8 +17,6 @@ async function openCamera() {
 
 window.jsFunctions = {
     setLicense: async function setLicense(license) {
-        if (isInitialized) return true;
-
         try {
             Dynamsoft.Core.CoreModule.engineResourcePaths.rootDirectory = "https://cdn.jsdelivr.net/npm";
             Dynamsoft.License.LicenseManager.initLicense(license, true);
