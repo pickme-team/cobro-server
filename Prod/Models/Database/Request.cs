@@ -1,4 +1,4 @@
-namespace Prod.Models.Database;
+    namespace Prod.Models.Database;
 
 public enum RequestStatus
 {
