@@ -4,13 +4,15 @@ namespace Prod.Models.Requests;
 
 public class DecorationCreateRequest : IValidatableObject
 {
-    [AllowedValues("Rectangle", "Icon")] public string Type { get; set; } = null!;
+    [AllowedValues("Rectangle", "Icon")]
+    [Required]
+    public string Type { get; set; } = null!;
 
-    public float X { get; set; }
+    [Required] public float X { get; set; }
 
-    public float Y { get; set; }
+    [Required] public float Y { get; set; }
 
-    public string? Name { get; set; }
+    [Required] public string Name { get; set; } = null!;
 
     public float? Width { get; set; }
 
@@ -18,9 +20,6 @@ public class DecorationCreateRequest : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Type == "Icon" && Name == null)
-            yield return new ValidationResult("Name is required for icons", [nameof(Name)]);
-
         if (Type != "Rectangle") yield break;
 
         if (Width == null)

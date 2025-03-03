@@ -11,7 +11,7 @@ public class DecorationResponse
 
     public float Y { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; } = null!;
 
     public float? Width { get; set; }
 
@@ -22,7 +22,7 @@ public class DecorationResponse
         Type = decoration.Type,
         X = decoration.X,
         Y = decoration.Y,
-        Name = (decoration as IconDecoration)?.Name,
+        Name = decoration.Name,
         Width = (decoration as RectangleDecoration)?.Width,
         Height = (decoration as RectangleDecoration)?.Height
     };
