@@ -17,16 +17,16 @@ public class DecorationService(ProdContext context) : IDecorationService
             {
                 X = req.X,
                 Y = req.Y,
-                Name = req.Name!
+                Name = req.Name
             });
         if (req.Type == "Rectangle")
             context.Decorations.Add(new RectangleDecoration
             {
                 X = req.X,
                 Y = req.Y,
+                Name = req.Name,
                 Width = req.Width!.Value,
-                Height = req.Height!.Value,
-                Color = req.Color!
+                Height = req.Height!.Value
             });
         return context.SaveChangesAsync();
     }
