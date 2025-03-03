@@ -24,6 +24,9 @@ public class BookController(IBookService bookService) : ControllerBase
     public Task<BookResponse> Delete(Guid id) =>
         bookService.Delete(id);
 
+    [HttpPatch("{id:guid}/cancel")]
+    public Task Cancel(Guid id) => bookService.CancelBook(id);
+
     [HttpGet("{id:guid}/qr")]
     public Task<QrResponse> Qr(Guid id) =>
         bookService.Qr(id, User.Id());
