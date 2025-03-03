@@ -142,7 +142,7 @@
         @foreach (var book in group)
         {
             <li>
-                <p>Бронирование #@book.Id: @book.Description</p>
+                <p>Бронирование #@book.Id.ToString().Split('-').Last(): @book.Description</p>
                 <p>Статус: @book.Status</p>
                 <p>Дата начала: @book.Start.ToUniversalTime()</p>
                 <p>Дата окончания: @book.End.ToUniversalTime()</p>
@@ -188,11 +188,11 @@
             <h4>Редактировать даты</h4>
             <div>
                 <label>Дата начала:</label>
-                <input type="datetime-local" @bind="(_editStart)" />
+                <input type="datetime-local" @bind="(_editStart)" step="900"/>
             </div>
             <div>
                 <label>Дата окончания:</label>
-                <input type="datetime-local" @bind="(_editEnd)" />
+                <input type="datetime-local" @bind="(_editEnd)" step="900"/>
             </div>
             <button @onclick="SaveDates">Сохранить</button>
         </div>
