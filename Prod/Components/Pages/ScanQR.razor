@@ -43,7 +43,6 @@
     private Book? _book;
     private string? _errorMessage;
     private string? _qrCode;
-    private String result = "";
     private DotNetObjectReference<ScanQR>? objRef;
     private string videoSourceId = "videoSource";
     private string overlayId = "overlay";
@@ -109,7 +108,7 @@
     {
         try
         {
-            await BookService.ConfirmQr(new ConfirmQrRequest() { Code = _qrCode });
+            await BookService.ConfirmQr(new ConfirmQrRequest() { Code = _qrCode ?? "" });
             if (_book != null)
             {
                 _book.Status = Status.Active;

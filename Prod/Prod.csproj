@@ -55,6 +55,7 @@
         <_ContentIncludedByDefault Remove="Pages\_Host.cshtml"/>
         <_ContentIncludedByDefault Remove="Pages\App.razor"/>
         <_ContentIncludedByDefault Remove="Pages\MainLayout.razor"/>
+        <_ContentIncludedByDefault Remove="wwwroot\js\jsInterop.js" />
     </ItemGroup>
 
 </Project>
