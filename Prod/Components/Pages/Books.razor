@@ -66,7 +66,6 @@
     {
         try
         {
-            // Throws if book isnt found
             await BookService.CancelBook(bookId);
             var book = _books.First(b => b.Id == bookId);
             _books.Remove(book);

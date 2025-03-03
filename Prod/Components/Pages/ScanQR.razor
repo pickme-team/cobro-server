@@ -16,7 +16,7 @@
 
 @if (_book != null && _user != null)
 {
-    <div>
+    <div class="modal">
         <h4>Информация о бронировании</h4>
         <p>Описание: @_book.Description</p>
         <p>Дата начала: @_book.Start</p>
@@ -29,7 +29,7 @@
             <div class="passport-info">
                 <h4>Паспортные данные</h4>
                 <div class="passport-header">
-                    <img src="@_user.AvatarUrl" alt="Avatar" class="passport-avatar"/>
+                    <img src="@_user.VerificationPhoto?.ToString()" alt="Avatar" class="passport-avatar"/>
                     <div class="passport-details">
                         <p>Фамилия: @_user.Passport.Lastname</p>
                         <p>Имя: @_user.Passport.Firstname</p>
@@ -69,13 +69,17 @@
     {
         try
         {
+            await JsRuntime.InvokeVoidAsync("logToConsole", $"QR: {_qrCode}", "info");
             _qrCode = qrCode;
             var id = QrService[long.Parse(qrCode)];
+            
+            await JsRuntime.InvokeVoidAsync("logToConsole", $"ID: {id?.ToString()}", "info");
 
             if (id is not null)
             {
                 _book = await BookService.GetBookById(id.Value);
                 _user = _book?.User;
+                await JsRuntime.InvokeVoidAsync("logToConsole", $"Success User ID: {_user?.Id.ToString()}", "info");
                 if (_book is null)
                     throw new Exception("Бронирование уже не существует");
             }
@@ -93,7 +97,7 @@
     private async Task ProcessManualQrCode()
     {
         var qrCode = new string(_manualQrCode);
-        if (!string.IsNullOrEmpty(qrCode) && qrCode.Trim().Length == 10)
+        if (!string.IsNullOrEmpty(qrCode))
             await ReturnBarcodeResultsAsync(qrCode);
         else
             _errorMessage = "Введите код целиком";
@@ -200,3 +204,21 @@
         background-color: #45a049;
     }
 </style>
+
+<script>
+    function logToConsole(message, level = 'info') {
+        switch (level) {
+            case 'info':
+                console.info(message);
+                break;
+            case 'warn':
+                console.warn(message);
+                break;
+            case 'error':
+                console.error(message);
+                break;
+            default:
+                console.log(message);
+        }
+    }
+</script>
