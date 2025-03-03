@@ -12,5 +12,5 @@ public class Passport
     public string Middlename { get; set; }
     // public string CodeOfIssuer { get; set; }
     public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
-    public DateTime Birthday { get; set; }
+    public string Birthday { get; set; }
 }
