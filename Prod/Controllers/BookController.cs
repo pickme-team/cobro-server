@@ -35,7 +35,7 @@ public class BookController(IBookService bookService, IQrCodeService qrCodeServi
 
     [HttpPatch("/confirm-qr")]
     [Authorize(Policy = "Admin")]
-    public Task ConfirmQr([FromBody] ConfirmQrRequest req) =>
+    public Task<ConfirmQrResponse> ConfirmQr([FromBody] ConfirmQrRequest req) =>
         bookService.ConfirmQr(req);
 
     [HttpGet("last")]

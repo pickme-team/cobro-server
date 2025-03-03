@@ -1,6 +1,7 @@
 using AspNetCore.Yandex.ObjectStorage;
 using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
+using Prod.Models.Requests;
 using Prod.Models.Responses;
 
 namespace Prod.Services;
@@ -14,7 +15,8 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         .ThenInclude(b => ((OfficeBook)b).OfficeSeat)
         .ThenInclude(s => s.OfficeZone)
         .Include(u => u.Books)
-        .ThenInclude(b => ((TalkroomBook)b).TalkroomZone);
+        .ThenInclude(b => ((TalkroomBook)b).TalkroomZone)
+        .Include(u => u.Passport);
 
     public async Task<UserResponse> UserById(Guid id) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Id == id));
@@ -22,7 +24,7 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
     public async Task<User> Get(Guid id) =>
         await UserQuery().SingleAsync(u => u.Id == id);
 
-    
+
     public async Task<UserResponse> UserByEmail(string email) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Email == email));
 
@@ -64,14 +66,22 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         return url;
     }
 
-    public async Task SetPassport(Guid userId, Passport passport)
+    public async Task SetPassport(Guid userId, PassportCreateRequest req)
     {
         var user = await context.Users
             .Include(u => u.Passport)
             .SingleAsync(u => u.Id == userId);
         if (user.Passport != null)
             throw new ArgumentException("Passport already exists");
-        user.Passport = passport;
+        user.Passport = new Passport
+        {
+            Serial = req.Serial,
+            Number = req.Number,
+            Firstname = req.Firstname,
+            Lastname = req.Lastname,
+            Middlename = req.Middlename,
+            Birthday = req.Birthday
+        };
         await context.SaveChangesAsync();
     }
 

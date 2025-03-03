@@ -14,22 +14,17 @@ public class ActionController(IActionService actionService) : ControllerBase
     public Task<List<Action>> GetAll() => actionService.AllActions();
 
     [HttpGet("{id:long}")]
-    public async Task<ActionResult<Action?>> Get(long id)
-    {
-        Action? action = await actionService.Get(id);
-        if (action is null) return NotFound();
-        return action;
-    }
+    public Task<Action> Get(long id) => actionService.Get(id);
 
     [HttpPost]
-    [Authorize(policy: "Admin")]
+    [Authorize(Policy = "Admin")]
     public async Task<Action> Add([FromBody] Action action) => await actionService.Create(action);
 
     [HttpPut]
-    [Authorize(policy: "Admin")]
+    [Authorize(Policy = "Admin")]
     public async Task<Action> Update([FromBody] Action action) => await actionService.Update(action);
 
     [HttpDelete]
-    [Authorize(policy: "Admin")]
+    [Authorize(Policy = "Admin")]
     public async Task<Action> Delete([FromBody] Action action) => await actionService.Delete(action);
 }

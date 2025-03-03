@@ -8,5 +8,5 @@ public interface IActionService
     Task<Action> Update(Action action);
     Task<Action> Delete(Action action);
     Task<List<Action>> AllActions();
-    Task<Action?> Get(long id);
+    Task<Action> Get(long id);
 }

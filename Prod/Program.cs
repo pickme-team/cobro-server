@@ -116,6 +116,8 @@ services.AddScoped<IPlaceService, PlaceService>();
 services.AddScoped<IOfficeZoneSeatsService, OfficeZoneSeatsService>();
 services.AddScoped<IZoneService, ZoneService>();
 services.AddScoped<IDecorationService, DecorationService>();
+services.AddScoped<IActionService, ActionService>();
+services.AddScoped<IRequestService, RequestService>();
 
 var app = builder.Build();
 
