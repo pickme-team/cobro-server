@@ -13,6 +13,7 @@ window.startScanning = () => {
             })
             .catch(err => {
                 console.error('Error accessing the camera: ', err);
+                alert('Error accessing the camera: ' + err);
             });
 
         function tick() {
@@ -30,5 +31,6 @@ window.startScanning = () => {
         }
     } else {
         console.error('getUserMedia API not supported.');
+        alert('getUserMedia API not supported by your browser.');
     }
 }
