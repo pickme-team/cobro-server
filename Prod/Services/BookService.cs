@@ -331,15 +331,17 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
 
         if (seatId == Guid.Empty)
             throw new ArgumentException("Seat ID cannot be empty", nameof(seatId));
-
         var user = await userService.UserById(userId);
         if (!zone.IsPublic && user.Role == Role.CLIENT)
             return false;
 
+        if (await context.OfficeSeats.FindAsync(seatId) == null || !zone.Seats.Contains(await context.OfficeSeats.FindAsync(seatId)))
+            throw new ArgumentException("There's no seat in this room");
+        
         var seat = await context.OfficeSeats
             .Include(s => s.Books)
             .FirstOrDefaultAsync(s => s.Id == seatId && s.OfficeZoneId == zone.Id);
-
+        
         if (seat == null)
             throw new ArgumentException("Seat not found in the specified zone", nameof(seatId));
 
