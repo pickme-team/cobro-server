@@ -12,7 +12,7 @@ public class RequestService(ProdContext context) : IRequestService
         var entity = new Request
         {
             Text = req.Text,
-            ActionId = req.ActionId,
+            ActionNumber = req.ActionNumber,
             Status = req.Status,
             AdditionalInfo = req.AdditionalInfo,
             BookId = req.BookId
