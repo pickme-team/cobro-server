@@ -3,28 +3,11 @@
 @using Prod.Models.Database
 @using Prod.Services
 @inject IBookService BookService
-@inject IJSRuntime JsRuntime
 @inject IQrCodeService QrService
-@inject IUserService UserService
+@inject IJSRuntime JsRuntime
 @rendermode InteractiveServer
 
 <h3>Сканировать QR</h3>
-
-<div class="select">
-    <button @onclick="GetCameras">Камеры</button>
-    <label for="videoSource"></label>
-    <select id="@videoSourceId" @onchange="OnCameraSelected">
-        @foreach (var camera in _cameras)
-        {
-            <option value="@camera.deviceId">@camera.label</option>
-        }
-    </select>
-    <button @onclick="StartCamera">Запустить камеру</button>
-    <button @onclick="StopCamera">Остановить камеру</button>
-</div>
-
-<video id="videoElement" width="300" height="200"></video>
-<canvas id="canvasElement" style="display:none;"></canvas>
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
@@ -39,7 +22,7 @@
         <p>Дата начала: @_book.Start</p>
         <p>Дата окончания: @_book.End</p>
         <p>Статус: @_book.Status</p>
-        <button @onclick="ChangeStatusToActive">Подтвердить</button>
+        <button @onclick="ChangeStatusToActive" class="confirm-button">Подтвердить</button>
 
         @if (_user.Passport != null)
         {
@@ -64,35 +47,23 @@
 
 <div class="manual-input">
     <label for="qrCodeInput">Введите QR код вручную:</label>
-    <input type="text" id="qrCodeInput" @bind="_manualQrCode">
-    <button @onclick="ProcessManualQrCode">Обработать</button>
+    <div class="qr-code-inputs">
+        @for (int i = 0; i < 10; i++)
+        {
+            var i1 = i;
+            var i2 = i;
+            <input type="text" id="qrCodeInput@(i + 1)" maxlength="1" @bind="_manualQrCode[i2]" @oninput="@(e => OnInput(e, i1))" class="qr-code-input" onkeypress="if (event.keyCode < 48 || event.keyCode > 57) event.preventDefault();">
+        }
+    </div>
+    <button @onclick="ProcessManualQrCode" class="process-button">Обработать</button>
 </div>
 
 @code {
-    public class MediaDeviceInfo
-    {
-        public string deviceId { get; set; }
-        public string label { get; set; }
-    }
-
     private Book? _book;
     private User? _user;
     private string? _errorMessage;
+    private char[] _manualQrCode = new char[10];
     private string? _qrCode;
-    private string? _manualQrCode;
-    private string videoSourceId = "videoSource";
-    private Timer? _timer;
-    private List<MediaDeviceInfo> _cameras = new List<MediaDeviceInfo>();
-    private string? _selectedCameraId;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await GetCameras();
-            StateHasChanged();
-        }
-    }
 
     public async Task ReturnBarcodeResultsAsync(string qrCode)
     {
@@ -119,64 +90,21 @@
         StateHasChanged();
     }
 
-    public async Task GetCameras()
-    {
-        _cameras = await JsRuntime.InvokeAsync<List<MediaDeviceInfo>>("jsFunctions.getCameras");
-        StateHasChanged();
-    }
-
-    public async Task OnCameraSelected(ChangeEventArgs e)
-    {
-        _selectedCameraId = e.Value?.ToString();
-    }
-
-    public async Task StartCamera()
-    {
-        try
-        {
-            await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera", "videoElement", _selectedCameraId);
-            _timer = new Timer((_) => CaptureAndScanFrame().ConfigureAwait(false), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
-        }
-        catch (TaskCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"An error occurred: {ex.Message}";
-        }
-    }
-
-    public async Task StopCamera()
-    {
-        await JsRuntime.InvokeVoidAsync("jsFunctions.stopCamera", "videoElement");
-        _timer?.Dispose();
-    }
-
-    private async Task CaptureAndScanFrame()
-    {
-        try
-        {
-            var frameData = await JsRuntime.InvokeAsync<byte[]>("jsFunctions.captureFrame");
-            string? result = await QrService.ScanQrCode(frameData);
-            if (!string.IsNullOrEmpty(result))
-            {
-                await ReturnBarcodeResultsAsync(result);
-            }
-        }
-        catch (TaskCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"An error occurred: {ex.Message}";
-        }
-    }
-
     private async Task ProcessManualQrCode()
     {
-        if (!string.IsNullOrEmpty(_manualQrCode))
+        var qrCode = new string(_manualQrCode);
+        if (!string.IsNullOrEmpty(qrCode) && qrCode.Trim().Length == 10)
+            await ReturnBarcodeResultsAsync(qrCode);
+        else
+            _errorMessage = "Введите код целиком";
+    }
+
+    private void OnInput(ChangeEventArgs e, int index)
+    {
+        var input = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(input) && index < _manualQrCode.Length - 1)
         {
-            await ReturnBarcodeResultsAsync(_manualQrCode);
+            _manualQrCode[index] = input[0];
         }
     }
 
@@ -192,7 +120,7 @@
 
             StateHasChanged();
         }
-        catch (ForbiddenException ex)
+        catch (ForbiddenException)
         {
             _errorMessage = $"Неверный QR код";
         }
@@ -200,58 +128,39 @@
 }
 
 <style>
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: block;
+    body {
+        font-family: Arial, sans-serif;
     }
 
-    .modal-content {
-        background-color: #fff;
-        margin: 15% auto;
+    h3 {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .alert {
+        color: red;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .passport-info,
+    .manual-input {
+        border: 1px solid #888;
         padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-    }
-
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .client-info {
-        display: flex;
-        align-items: center;
-    }
-
-    .client-details {
-        flex: 1;
-    }
-
-    .passport-info {
-        border: 1px solid #888;
-        padding: 10px;
         margin-top: 20px;
         background-color: #f9f9f9;
+        border-radius: 10px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-    .passport-header {
+    .passport-header,
+    .qr-code-inputs {
         display: flex;
+        justify-content: center;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 20px;
     }
 
     .passport-avatar {
@@ -264,20 +173,30 @@
         margin: 5px 0;
     }
 
-    .filters {
-        margin-bottom: 20px;
+    .qr-code-inputs input {
+        text-align: center;
+        font-size: 24px;
+        width: 50px;
+        height: 50px;
+        margin: 0 5px;
     }
 
-    .manual-input {
-        margin-top: 20px;
-    }
-
-    .manual-input label {
+    .process-button,
+    .confirm-button {
         display: block;
-        margin-bottom: 5px;
+        margin: 0 auto;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
     }
 
-    .manual-input input {
-        margin-right: 10px;
+    .process-button:hover,
+    .confirm-button:hover {
+        background-color: #45a049;
     }
 </style>
