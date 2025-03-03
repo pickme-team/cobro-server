@@ -1,6 +1,7 @@
 using AspNetCore.Yandex.ObjectStorage;
 using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
+using Prod.Models.Requests;
 using Prod.Models.Responses;
 
 namespace Prod.Services;
@@ -65,14 +66,22 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         return url;
     }
 
-    public async Task SetPassport(Guid userId, Passport passport)
+    public async Task SetPassport(Guid userId, PassportCreateRequest req)
     {
         var user = await context.Users
             .Include(u => u.Passport)
             .SingleAsync(u => u.Id == userId);
         if (user.Passport != null)
             throw new ArgumentException("Passport already exists");
-        user.Passport = passport;
+        user.Passport = new Passport
+        {
+            Serial = req.Serial,
+            Number = req.Number,
+            Firstname = req.Firstname,
+            Lastname = req.Lastname,
+            Middlename = req.Middlename,
+            Birthday = req.Birthday
+        };
         await context.SaveChangesAsync();
     }
 

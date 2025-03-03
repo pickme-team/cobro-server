@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Prod.Exceptions;
 using Prod.Models;
 using Prod.Models.Database;
+using Prod.Models.Requests;
 using Prod.Models.Responses;
 using Prod.Services;
 
@@ -59,11 +60,11 @@ public class UserController(IUserService userService) : ControllerBase
 
     [HttpPost("{id:guid}/passport")]
     [Authorize(Policy = "Admin")]
-    public async Task<ActionResult> SetPassport([FromBody] Passport passport, Guid id)
+    public async Task<ActionResult> SetPassport([FromBody] PassportCreateRequest req, Guid id)
     {
         try
         {
-            await userService.SetPassport(id, passport);
+            await userService.SetPassport(id, req);
             return Ok();
         }
         catch (ArgumentException e)

@@ -10,7 +10,7 @@ public class Action
     public string Text { get; set; } = null!;
     public string Description { get; set; } = null!;
     public bool AdditionalInfo { get; set; }
-    public Color Color { get; set; }
+    public string Color { get; set; }
 
     public List<Request> Requests { get; set; } = [];
 }

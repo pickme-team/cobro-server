@@ -1,4 +1,5 @@
 using Prod.Models.Database;
+using Prod.Models.Requests;
 using Prod.Models.Responses;
 
 namespace Prod.Services;
@@ -15,7 +16,7 @@ public interface IUserService
     Task<List<UserResponse>> AllUsers();
     Task<string> UploadMedia(IFormFile file, Guid id);
     Task SetVerificationPhoto(IFormFile file, Guid id);
-    Task SetPassport(Guid userId, Passport passport);
+    Task SetPassport(Guid userId, PassportCreateRequest req);
 
     Task<User> Get(Guid id);
 }
