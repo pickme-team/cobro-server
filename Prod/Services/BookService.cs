@@ -28,7 +28,7 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
     public async Task EditDateBook(Guid bookId, DateTime start, DateTime end, Guid? userId = null)
     {
         if (start > end)
-            throw new ArgumentOutOfRangeException("Start date cannot be greater than end date");
+            throw new ArgumentOutOfRangeException(nameof(start), "Start date cannot be greater than end date");
 
         await CancelBook(bookId);
 
@@ -73,8 +73,6 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
                 break;
             default:
                 throw new ForbiddenException("Not a bookable zone");
-            
-            
         }
     }
 
