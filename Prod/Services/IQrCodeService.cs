@@ -9,5 +9,6 @@ namespace Prod.Services
         Guid? this[long id] { get; set; }
         Tuple<long?, int?> GetByValue(Guid value);
         Guid? Get(long id);
+        Task<string?> ScanQrCode(byte[] imageBytes);
     }
 }

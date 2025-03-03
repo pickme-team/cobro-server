@@ -1,3 +1,5 @@
+using System.Drawing;
+using IronBarCode;
 using StackExchange.Redis;
 
 namespace Prod.Services;
@@ -57,5 +59,22 @@ public class QrCodeService : IQrCodeService
         if (!value.HasValue) return null;
 
         return new Guid(value.ToString());
+    }
+
+    public async Task<string?> ScanQrCode(byte[] imageBytes)
+    {
+        try
+        {
+            using (var ms = new MemoryStream(imageBytes))
+            {
+                var barcodeResult = await BarcodeReader.ReadAsync(ms);
+
+                return barcodeResult?.Values()[0];
+            }
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

@@ -18,10 +18,8 @@
     <button @onclick="StopCamera">Stop Camera</button>
 </div>
 
-<div id="videoview">
-    <div class="dce-video-container" id="@videoContainerId"></div>
-    <canvas id="@overlayId"></canvas>
-</div>
+<video id="videoElement" width="300" height="200"></video>
+<canvas id="canvasElement" style="display:none;"></canvas>
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
@@ -64,24 +62,17 @@
     private User? _user;
     private string? _errorMessage;
     private string? _qrCode;
-    private DotNetObjectReference<ScanQR>? objRef;
     private string videoSourceId = "videoSource";
-    private string overlayId = "overlay";
-    private string videoContainerId = "videoContainer";
-    bool initialized = false;
+    private Timer? _timer;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            initialized = await JsRuntime.InvokeAsync<Boolean>("jsFunctions.setLicense", "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAzNzUzNTE3LVRYbFFjbTlxIiwibWFpblNlcnZlclVSTCI6Imh0dHBzOi8vbWRscy5keW5hbXNvZnRvbmxpbmUuY29tIiwib3JnYW5pemF0aW9uSUQiOiIxMDM3NTM1MTciLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJjaGVja0NvZGUiOjkzMDAyMTQ0MX0=");
-            objRef = DotNetObjectReference.Create(this);
-            await JsRuntime.InvokeAsync<Boolean>("jsFunctions.initScanner", objRef, videoContainerId, videoSourceId, overlayId);
             StateHasChanged();
         }
     }
 
-    [JSInvokable]
     public async Task ReturnBarcodeResultsAsync(string qrCode)
     {
         try
@@ -107,24 +98,57 @@
         StateHasChanged();
     }
 
-    public void Dispose()
-    {
-        objRef?.Dispose();
-    }
-
     public async Task GetCameras()
     {
-        await JsRuntime.InvokeVoidAsync("jsFunctions.getCameras");
+        // Реализуйте получение списка камер
     }
 
     public async Task StartCamera()
     {
-        await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera");
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("jsFunctions.startCamera", "videoElement");
+            _timer = new Timer((_) => CaptureAndScanFrame().ConfigureAwait(false), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An error occurred: {ex.Message}";
+        }
     }
+
 
     public async Task StopCamera()
     {
-        await JsRuntime.InvokeVoidAsync("jsFunctions.stopCamera");
+        await JsRuntime.InvokeVoidAsync("jsFunctions.stopCamera", "videoElement");
+        _timer?.Dispose();
+    }
+
+    private async Task CaptureAndScanFrame()
+    {
+        try
+        {
+            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
+            {
+                string dataUrl = await JsRuntime.InvokeAsync<string>("jsFunctions.captureFrame", cts.Token, "videoElement", "canvasElement");
+                byte[] imageBytes = Convert.FromBase64String(dataUrl.Split(',')[1]);
+            
+                string? result = await QrService.ScanQrCode(imageBytes);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    await ReturnBarcodeResultsAsync(result);
+                }
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An error occurred: {ex.Message}";
+        }
     }
 
     private async Task ChangeStatusToActive()
@@ -144,7 +168,6 @@
             _errorMessage = $"Неверный QR код";
         }
     }
-
 }
 
 <style>
