@@ -14,7 +14,8 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
         .ThenInclude(b => ((OfficeBook)b).OfficeSeat)
         .ThenInclude(s => s.OfficeZone)
         .Include(u => u.Books)
-        .ThenInclude(b => ((TalkroomBook)b).TalkroomZone);
+        .ThenInclude(b => ((TalkroomBook)b).TalkroomZone)
+        .Include(u => u.Passport);
 
     public async Task<UserResponse> UserById(Guid id) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Id == id));
@@ -22,7 +23,7 @@ public class UserService(ProdContext context, IYandexStorageService objectStoreS
     public async Task<User> Get(Guid id) =>
         await UserQuery().SingleAsync(u => u.Id == id);
 
-    
+
     public async Task<UserResponse> UserByEmail(string email) =>
         UserResponse.From(await UserQuery().SingleAsync(u => u.Email == email));
 

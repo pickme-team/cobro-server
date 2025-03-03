@@ -268,7 +268,10 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         var expectedCode = qrCodeService[long.Parse(req.Code)];
         if (expectedCode == null)
             throw new ForbiddenException("Qr code not found or expired");
-        var book = await context.Books.Include(b => b.User).SingleAsync(b => b.Id == expectedCode);
+        var book = await context.Books
+            .Include(b => b.User)
+            .ThenInclude(u => u.Passport)
+            .SingleAsync(b => b.Id == expectedCode);
         if (book.Status != Status.Pending)
             throw new ForbiddenException("This book is not pending");
 
@@ -276,7 +279,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
             return new ConfirmQrResponse
             {
                 BookId = book.Id,
-                NeedsPassport = true
+                NeedsPassport = true,
+                UserId = book.UserId
             };
 
         book.Status = Status.Active;
@@ -285,7 +289,8 @@ public class BookService(ProdContext context, IQrCodeService qrCodeService, IUse
         return new ConfirmQrResponse
         {
             BookId = book.Id,
-            NeedsPassport = false
+            NeedsPassport = false,
+            UserId = book.UserId
         };
     }
 
