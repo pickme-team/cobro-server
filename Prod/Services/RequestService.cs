@@ -1,19 +1,27 @@
 using Microsoft.EntityFrameworkCore;
-using Prod.Exceptions;
+using Org.BouncyCastle.Ocsp;
 using Prod.Models.Database;
+using Prod.Models.Requests;
 
 namespace Prod.Services;
 
-public class RequestService(ProdContext context, IBookService bookService) : IRequestService
+public class RequestService(ProdContext context) : IRequestService
 {
-    public async Task Add(Request request)
+    public async Task<Request> Add(RequestRequest req)
     {
-        request.CreatedAt = DateTime.UtcNow;
-        request.Book = await bookService.GetBookById(request.Book.Id);
-        if (bookService.GetBookById(request.Book.Id).Result == null) throw new NotFoundException("book not found");
-        if (request.Book == null) throw new NotFoundException("book not found");
-        context.Requests.Add(request);
+        var entity = new Request
+        {
+            Text = req.Text,
+            ActionNumber = req.ActionNumber,
+            Status = req.Status,
+            AdditionalInfo = req.AdditionalInfo,
+            BookId = req.BookId
+        };
+
+        context.Requests.Add(entity);
         await context.SaveChangesAsync();
+
+        return entity;
     }
 
     public Task<List<Request>> Today() =>

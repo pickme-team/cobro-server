@@ -2,6 +2,7 @@
 @using Prod.Exceptions
 @using Prod.Models.Database
 @using Prod.Services
+@inherits AuthComponentBase
 @inject IBookService BookService
 @inject IQrCodeService QrService
 @inject IUserService UserService
@@ -98,33 +99,32 @@
 
                         break;
                     case QrVerState.InputPassportData:
-                        var passport = new PassportCreateRequest();
-                        <EditForm Model="@passport" OnValidSubmit="() => SetNewPassportData(passport)" style="display: block;" FormName="SignInForm">
+                        <EditForm Model="@_passport" OnValidSubmit="SetNewPassportData" style="display: block;" FormName="PassportForm">
                             <DataAnnotationsValidator/>
                             <ValidationSummary/>
                             <div>
                                 <label>Серия</label>
-                                <InputText @bind-Value="passport.Serial" class="form-control"/>
+                                <InputText @bind-Value="_passport.Serial" class="form-control"/>
                             </div>
                             <div>
                                 <label>Номер</label>
-                                <InputText @bind-Value="passport.Number" class="form-control"/>
+                                <InputText @bind-Value="_passport.Number" class="form-control"/>
                             </div>
                             <div>
                                 <label>Имя</label>
-                                <InputText @bind-Value="passport.Firstname" class="form-control"/>
+                                <InputText @bind-Value="_passport.Firstname" class="form-control"/>
                             </div>
                             <div>
                                 <label>Фамилия</label>
-                                <InputText @bind-Value="passport.Lastname" class="form-control"/>
+                                <InputText @bind-Value="_passport.Lastname" class="form-control"/>
                             </div>
                             <div>
                                 <label>Отчество</label>
-                                <InputText @bind-Value="passport.Middlename" class="form-control"/>
+                                <InputText @bind-Value="_passport.Middlename" class="form-control"/>
                             </div>
                             <div>
                                 <label>Дата рождения</label>
-                                <InputText @bind-Value="passport.Birthday" type="datetime-local" class="form-control"/>
+                                <InputText @bind-Value="_passport.Birthday" type="datetime-local" class="form-control"/>
                             </div>
                             <button type="submit" class="btn btn-primary">Подтвердить</button>
                         </EditForm>
@@ -132,7 +132,7 @@
                     case QrVerState.TakeNewPhoto:
                         <div>
                             <label for="fileInput">Загрузите фотографию:</label>
-                            <InputFile id="fileInput" OnChange="OnFileChange" accept="image/*" />
+                            <InputFile class="file-input" id="fileInput" OnChange="OnFileChange" accept="image/*" />
                         </div>
                         <button @onclick="UploadPhoto" class="confirm-button">Загрузить</button>
                         break;
@@ -144,14 +144,13 @@
 
 <div class="manual-input">
     <label for="qrCodeInput">Введите QR код вручную или сканируйте его:</label>
-    <div class="qr-code-inputs">
+    <div class="qr-code-inputs" @onmouseover="ActivateInput" @onmouseout="DeactivateInput">
         @for (int i = 0; i < 10; i++)
         {
-            var i1 = i;
-            var i2 = i;
-            <input type="text" id="qrCodeInput@(i + 1)" maxlength="1" @bind="_manualQrCode[i2]" @oninput="@(e => OnInput(e, i1))" class="qr-code-input" onkeypress="if (event.keyCode < 48 || event.keyCode > 57) event.preventDefault();">
+            <span class="qr-code-digit">@(_manualQrCode[i] == '\0' ? "_" : _manualQrCode[i].ToString())</span>
         }
     </div>
+    <input type="text" id="hiddenInput" @bind="_manualQrCodeString" @oninput="HandleInput" maxlength="10" class="hidden-input" />
     <button @onclick="ProcessManualQrCode" class="process-button">Обработать</button>
 </div>
 
@@ -170,9 +169,11 @@
     private User? _user;
     private string? _errorMessage;
     private char[] _manualQrCode = new char[10];
+    private string _manualQrCodeString = string.Empty;
     private string? _qrCode;
     private QrVerState _state = QrVerState.Start;
     private IBrowserFile? _selectedFile;
+    private PassportCreateRequest _passport = new();
 
     private void OnFileChange(InputFileChangeEventArgs e)
     {
@@ -193,8 +194,8 @@
             var fileName = _selectedFile.Name;
             
             await UserService.SetVerificationPhoto(stream, fileName, _user!.Id);
-            
-            _state = QrVerState.ShowUserPhoto;
+
+            _state = _user!.Passport is null ? QrVerState.InputPassportData : QrVerState.ShowUserPhoto;
             StateHasChanged();
         }
         catch (Exception ex)
@@ -216,14 +217,15 @@
         _book = null;
         _manualQrCode = new char[10];
         _state = QrVerState.Start;
+        _passport = new();
         StateHasChanged();
     }
 
-    private async Task SetNewPassportData(PassportCreateRequest request)
+    private async Task SetNewPassportData()
     {
         if (_state == QrVerState.InputPassportData)
         {
-            await UserService.SetPassport(_user!.Id, request);
+            await UserService.SetPassport(_user!.Id, _passport);
         }
 
         await ChangeStatusToActive();
@@ -268,13 +270,34 @@
             _errorMessage = "Введите код целиком";
     }
 
-    private void OnInput(ChangeEventArgs e, int index)
+    private void HandleInput(ChangeEventArgs e)
     {
-        var input = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(input) && index < _manualQrCode.Length - 1)
+        var input = e.Value?.ToString() ?? string.Empty;
+        input = new string(input.Where(char.IsAsciiDigit).ToArray());
+        
+        if (input.Length > 10)
         {
-            _manualQrCode[index] = input[0];
+            input = input.Substring(0, 10);
         }
+        
+        Array.Clear(_manualQrCode, 0, _manualQrCode.Length);
+        
+        for (int i = 0; i < input.Length; i++)
+        {
+            _manualQrCode[i] = input[i];
+        }
+
+        _manualQrCodeString = input;
+    }
+    
+    private void ActivateInput()
+    {
+        JsRuntime.InvokeVoidAsync("activateInput", "hiddenInput");
+    }
+
+    private void DeactivateInput()
+    {
+        JsRuntime.InvokeVoidAsync("deactivateInput", "hiddenInput");
     }
 
     private async Task ChangeStatusToActive()
@@ -396,6 +419,39 @@
         background-color: #45a049;
     }
 
+    .hidden-input {
+        position: absolute;
+        opacity: 0;
+        height: 0;
+        width: 0;
+        border: none;
+        outline: none;
+    }
+
+    .qr-code-inputs {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        cursor: text;
+    }
+
+    .qr-code-digit {
+        font-size: 24px;
+        width: 30px;
+        text-align: center;
+        margin: 0 5px;
+        border-bottom: 2px solid #000;
+    }
+
+    .manual-input {
+        position: relative;
+    }
+
     .file-input {
         margin-top: 20px;
     }
@@ -427,5 +483,15 @@
             default:
                 console.log(message);
         }
+    }
+
+    function activateInput(elementId) {
+        const input = document.getElementById(elementId);
+        input.focus();
+    }
+
+    function deactivateInput(elementId) {
+        const input = document.getElementById(elementId);
+        input.blur();
     }
 </script>

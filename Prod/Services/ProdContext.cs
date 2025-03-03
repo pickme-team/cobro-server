@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Prod.Models.Database;
-using Action = Prod.Models.Database.Action;
 
 namespace Prod.Services;
 
@@ -19,7 +18,6 @@ public class ProdContext(DbContextOptions options) : DbContext(options)
     public DbSet<Passport> Passports { get; set; }
 
     public DbSet<Decoration> Decorations { get; set; }
-    public DbSet<Action> Actions { get; set; }
 
     public DbSet<Request> Requests { get; set; }
 

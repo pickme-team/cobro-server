@@ -1,4 +1,4 @@
-    namespace Prod.Models.Database;
+namespace Prod.Models.Database;
 
 public enum RequestStatus
 {
@@ -12,8 +12,7 @@ public class Request
     public Guid Id { get; set; }
     public string Text { get; set; } = null!;
 
-    public long ActionId { get; set; }
-    public Action Action { get; set; } = null!;
+    public int? ActionNumber { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
