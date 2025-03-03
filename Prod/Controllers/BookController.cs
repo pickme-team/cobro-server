@@ -48,10 +48,11 @@ public class BookController(IBookService bookService) : ControllerBase
     [HttpGet]
     [Authorize(Policy = "Admin")]
     public Task<List<BookWithUserResponse>> GetAll() => bookService.GetAll();
-    
+
     [HttpGet("/admin/active")]
     [Authorize(Policy = "Admin")]
-    public List<BookWithUserResponse> GetAllAdmin() => bookService.GetAll().Result.FindAll(b => b.Status == Status.Active || b.Status == Status.Pending);
+    public List<BookWithUserResponse> GetAllAdmin() => bookService.GetAll().Result
+        .FindAll(b => b.Status == Status.Active || b.Status == Status.Pending);
 
     [HttpGet("active")]
     public async Task<List<BookResponse>> ActiveBooks()
@@ -60,8 +61,13 @@ public class BookController(IBookService bookService) : ControllerBase
         return books.Select(BookResponse.From).ToList();
     }
 
+    [HttpPatch("{id:guid}/reschedule")]
+    public Task Reschedule(Guid id, [FromBody] RescheduleRequest req) =>
+        bookService.EditDateBook(id, req.From, req.To, User.Id());
+
     [HttpGet("{id:guid}/validate")]
-    public async Task<ActionResult> Validate(Guid id, [FromQuery] DateTime from, [FromQuery] DateTime to, [FromQuery] Guid? seatId)
+    public async Task<ActionResult> Validate(Guid id, [FromQuery] DateTime from, [FromQuery] DateTime to,
+        [FromQuery] Guid? seatId)
     {
         try
         {
