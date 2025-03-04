@@ -87,7 +87,10 @@ services.AddOpenTelemetry()
     .WithMetrics(options =>
     {
         options.AddPrometheusExporter();
-        options.AddRuntimeInstrumentation()
+        options
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
             .AddMeter("Microsoft.AspNetCore.Hosting")
             .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
             .AddMeter("System.Net.Http")
@@ -103,7 +106,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .WriteTo.Console()
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
-    .WriteTo.GrafanaLoki("http://localhost:3100", new List<LokiLabel>
+    .WriteTo.GrafanaLoki("http://loki:3100", new List<LokiLabel>
     {
         new LokiLabel { Key = "app", Value = "webapi" }
     }, propertiesAsLabels: new[] { "app" })
