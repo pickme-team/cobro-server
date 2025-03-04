@@ -107,7 +107,7 @@ public class UserController(IUserService userService) : ControllerBase
                 Id = user.Passport.Id,
                 Number = user.Passport.Number.Substring(0, 2) + new string('*', user.Passport.Number.Length - 4) +
                          user.Passport.Number.Substring(user.Passport.Number.Length - 2),
-                Serial = user.Passport.Number.Substring(0, 2) + new string('*', user.Passport.Number.Length - 2),
+                Serial = user.Passport.Serial.Substring(0, 2) + new string('*', user.Passport.Serial.Length - 2),
                 Firstname = user.Passport.Firstname,
                 Lastname = user.Passport.Lastname,
                 Middlename = user.Passport.Middlename,
