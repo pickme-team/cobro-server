@@ -7,6 +7,7 @@ namespace Prod.Services;
 public interface IBookService
 {
     Task<List<Book>> GetAllActiveBooks();
+    Task<List<Book>> GetAllFinishedBooks();
     Task CancelBook(Guid bookId);
     Task EditDateBook(Guid bookId, DateTime start, DateTime end, Guid? userId = null);
     Task<Book?> GetBookById(Guid bookId);
