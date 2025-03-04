@@ -23,6 +23,9 @@ public class BookService(
     public async Task<List<Book>> GetAllActiveBooks() =>
         await BooksQuery.Where(b => b.Status == Status.Active || b.Status == Status.Pending).ToListAsync();
 
+    public async Task<List<Book>> GetAllFinishedBooks() =>
+        await BooksQuery.Where(b => b.Status == Status.Ended || b.Status == Status.Cancelled).ToListAsync();
+
     public async Task CancelBook(Guid bookId)
     {
         var book = await context.Books.SingleAsync(b => b.Id == bookId);

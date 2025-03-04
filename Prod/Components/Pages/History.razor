@@ -1,4 +1,4 @@
-@page "/books"
+@page "/history"
 @using Prod.Models.Database
 @using Prod.Services
 @inherits AuthComponentBase
@@ -23,7 +23,6 @@
     private User? _selectedUser;
     private bool _showModal;
     private string? _errorMessage;
-    private bool _showEditModal;
     private Guid _editingBookId;
     private DateTime _editStart;
     private DateTime _editEnd;
@@ -41,7 +40,7 @@
     {
         try
         {
-            _books = await BookService.GetAllActiveBooks();
+            _books = await BookService.GetAllFinishedBooks();
         }
         catch (Exception ex)
         {
@@ -60,59 +59,8 @@
     private void CloseModal()
     {
         _showModal = false;
-        _showEditModal = false;
     }
-
-    private async Task CancelBook(Guid bookId)
-    {
-        try
-        {
-            await BookService.CancelBook(bookId);
-            var book = _books.First(b => b.Id == bookId);
-            _books.Remove(book);
-            ApplyFilters();
-            StateHasChanged();
-        }
-        catch (InvalidOperationException)
-        {
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Ошибка: {ex.Message}";
-        }
-    }
-
-    private void EditDates(Guid bookId, DateTime start, DateTime end)
-    {
-        _editingBookId = bookId;
-        _editStart = start.ToUniversalTime();
-        _editEnd = end.ToUniversalTime();
-        _showEditModal = true;
-    }
-
-    private async Task SaveDates()
-    {
-        try
-        {
-            await BookService.EditDateBook(_editingBookId, _editStart, _editEnd);
-            var book = _books.FirstOrDefault(b => b.Id == _editingBookId);
-            if (book != null)
-            {
-                book.Start = _editStart;
-                book.End = _editEnd;
-                ApplyFilters();
-                StateHasChanged();
-            }
-
-            CloseModal();
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Ошибка: {ex.Message}";
-        }
-    }
-
+    
     private void ApplyFilters()
     {
         _filteredBooks = _books.Where(b =>
@@ -149,11 +97,6 @@
                 <p>Дата начала: @book.Start.ToUniversalTime()</p>
                 <p>Дата окончания: @book.End.ToUniversalTime()</p>
                 <button @onclick="() => ShowUserInfo(book.Id)">Информация о клиенте</button>
-                <button @onclick="() => CancelBook(book.Id)">Отменить</button>
-                @if (book.Status == Status.Pending)
-                {
-                    <button @onclick="() => EditDates(book.Id, book.Start, book.End)">Редактировать</button>
-                }
             </li>
         }
     </ul>
@@ -178,25 +121,6 @@
                     </div>
                 }
             </div>
-        </div>
-    </div>
-}
-
-@if (_showEditModal)
-{
-    <div class="modal" style="display: block;">
-        <div class="modal-content">
-            <span class="close" @onclick="CloseModal">&times;</span>
-            <h4>Редактировать даты</h4>
-            <div>
-                <label>Дата начала:</label>
-                <input type="datetime-local" @bind="(_editStart)" step="900"/>
-            </div>
-            <div>
-                <label>Дата окончания:</label>
-                <input type="datetime-local" @bind="(_editEnd)" step="900"/>
-            </div>
-            <button @onclick="SaveDates">Сохранить</button>
         </div>
     </div>
 }
