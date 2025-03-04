@@ -1,4 +1,6 @@
-﻿@inherits LayoutComponentBase
+﻿@using Blazored.LocalStorage
+@inherits LayoutComponentBase
+@inject ILocalStorageService LocalStorage
 
 <script src="jsInterop.js"></script>
 
@@ -9,7 +11,7 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <button @onclick="ExitFromAcc">Выйти из системы</button>
         </div>
 
         <article class="content px-4">
@@ -23,3 +25,12 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+
+    private async Task ExitFromAcc()
+    {
+        await LocalStorage.ClearAsync();
+    }
+
+}
