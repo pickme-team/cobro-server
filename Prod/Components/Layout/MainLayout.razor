@@ -1,6 +1,8 @@
 ﻿@using Blazored.LocalStorage
 @inherits LayoutComponentBase
+@inject NavigationManager Navigation
 @inject ILocalStorageService LocalStorage
+@rendermode InteractiveServer
 
 <script src="jsInterop.js"></script>
 
@@ -31,6 +33,8 @@
     private async Task ExitFromAcc()
     {
         await LocalStorage.ClearAsync();
+        Navigation.NavigateTo("/auth");
+        StateHasChanged();
     }
 
 }
