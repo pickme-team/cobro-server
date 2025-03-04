@@ -24,8 +24,27 @@ public class RequestService(ProdContext context) : IRequestService
         return entity;
     }
 
-    public Task<List<Request>> Today() =>
-        context.Requests.Where(r => r.CreatedAt.Date == DateTime.UtcNow.Date).Include(u => u.Book).Include(u => u.Book.User).ToListAsync();
+    public async Task<List<Request>> Today()
+    {
+        var entities = await context.Requests.Where(r => r.CreatedAt.Date == DateTime.UtcNow.Date)
+            .Include(u => u.Book)
+            .ThenInclude(u => u.User)
+            .Include(u => u.Book)
+            .ThenInclude(b => ((OfficeBook)b).OfficeSeat)
+            .ThenInclude(s => s.OfficeZone)
+            .Include(u => u.Book)
+            .ThenInclude(b => ((OpenBook)b).OpenZone)
+            .Include(u => u.Book)
+            .ThenInclude(b => ((TalkroomBook)b).TalkroomZone)
+            .ToListAsync();
+        foreach (var entity in entities)
+        {
+            entity.Book.User.Books.Clear();
+        }
+
+        return entities;
+    }
+
     public async Task Mark(Guid id, RequestStatus status)
     {
         var request = await context.Requests.SingleAsync(r => r.Id == id);

@@ -31,7 +31,7 @@
   redis:
     image: redis:latest
     ports:
-      - "8071:6379"
+      - "8075:6379"
     volumes:
       - redis_data:/data
     healthcheck:

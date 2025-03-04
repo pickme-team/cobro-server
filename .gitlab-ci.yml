@@ -94,6 +94,7 @@ deploy:
     - scp -o StrictHostKeyChecking=no compose.yaml "$ENV_SSH_USER@$ENV_SSH_HOST:/home/ubuntu/compose.yaml"
     - scp -o StrictHostKeyChecking=no prometheus.yml "$ENV_SSH_USER@$ENV_SSH_HOST:/home/ubuntu/prometheus.yml"
     - scp -r -o StrictHostKeyChecking=no grafana "$ENV_SSH_USER@$ENV_SSH_HOST:/home/ubuntu/grafana"
+    - scp -r -o StrictHostKeyChecking=no elasticsearch "$ENV_SSH_USER@$ENV_SSH_HOST:/home/ubuntu/elasticsearch"
     - ssh -o StrictHostKeyChecking=no "$ENV_SSH_USER@$ENV_SSH_HOST" "
       echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin &&
       docker compose -f /home/ubuntu/compose.yaml down &&
