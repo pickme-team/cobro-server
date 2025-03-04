@@ -1,7 +1,5 @@
 ﻿@using Blazored.LocalStorage
 @inherits LayoutComponentBase
-@inject NavigationManager Navigation
-@inject ILocalStorageService LocalStorage
 
 <script src="jsInterop.js"></script>
 
@@ -11,13 +9,6 @@
     </div>
 
     <main>
-        @if (LocalStorage.GetItemAsStringAsync("adminId").Result is not null)
-        {
-            <div class="top-row px-4">
-                <button @onclick="ExitFromAcc">Выйти из системы</button>
-            </div>
-        }
-
         <article class="content px-4">
             @Body
         </article>
@@ -29,14 +20,3 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
-
-@code {
-
-    private async Task ExitFromAcc()
-    {
-        await LocalStorage.SetItemAsStringAsync("adminId", "");
-        Navigation.NavigateTo("/auth");
-        StateHasChanged();
-    }
-
-}
