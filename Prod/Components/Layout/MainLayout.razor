@@ -11,9 +11,12 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <button @onclick="ExitFromAcc">Выйти из системы</button>
-        </div>
+        @if (LocalStorage.GetItemAsStringAsync("adminId").Result is not null)
+        {
+            <div class="top-row px-4">
+                <button @onclick="ExitFromAcc">Выйти из системы</button>
+            </div>
+        }
 
         <article class="content px-4">
             @Body
@@ -31,7 +34,7 @@
 
     private async Task ExitFromAcc()
     {
-        await LocalStorage.ClearAsync();
+        await LocalStorage.SetItemAsStringAsync("adminId", "");
         Navigation.NavigateTo("/auth");
         StateHasChanged();
     }
