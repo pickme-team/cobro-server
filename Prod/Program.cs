@@ -136,7 +136,14 @@ services.AddSingleton<IJwtService, JwtService>();
 services.ConfigureOptions<JwtBearerOptionsConfiguration>();
 services.AddAuthorization(o => o.AddPolicy("Admin", policy => policy.RequireClaim("admin", true.ToString())));
 services.AddAuthentication().AddJwtBearer();
-services.AddYandexObjectStorage(builder.Configuration);
+services.AddYandexObjectStorage(options =>
+{
+    options.AccessKey = builder.Configuration["YA_CLOUD_ACCESS"];
+    options.SecretKey = builder.Configuration["YA_CLOUD_SECRET"];
+    options.Location = builder.Configuration["YA_CLOUD_LOCATION"];
+    options.BucketName = builder.Configuration["YA_CLOUD_BUCKET"];
+    options.Protocol = "https";
+});
 
 services.AddHostedService<LateService>();
 
