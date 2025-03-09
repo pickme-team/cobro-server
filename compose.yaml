@@ -1,11 +1,10 @@
 ﻿services:
   prod:
-    image: gitlab.prodcontest.ru:5050/team-21/3bd/prod:latest
-    env_file:
-      - Prod/.env
     build:
       context: .
       dockerfile: Prod/Dockerfile
+    env_file:
+      - Prod/.env
     depends_on:
       postgres:
         condition: service_healthy

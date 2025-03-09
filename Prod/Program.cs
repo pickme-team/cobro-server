@@ -1,6 +1,7 @@
 using System.Configuration;
 using System.Net;
 using System.Reflection;
+using AspNetCore.Yandex.ObjectStorage;
 using AspNetCore.Yandex.ObjectStorage.Extensions;
 using Blazored.LocalStorage;
 using Microsoft.EntityFrameworkCore;
@@ -144,6 +145,7 @@ services.AddYandexObjectStorage(options =>
     options.BucketName = builder.Configuration["YA_CLOUD_BUCKET"];
     options.Protocol = "https";
 });
+services.AddSingleton<IYandexStorageService, YandexStorageService>();
 
 services.AddHostedService<LateService>();
 
